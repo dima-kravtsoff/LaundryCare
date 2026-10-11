@@ -1,0 +1,19 @@
+*.iml
+.gradle
+.kotlin
+/.idea
+.DS_Store
+build/
+/captures
+.externalNativeBuild
+.cxx
+
+# Machine-specific SDK location. Never commit.
+local.properties
+
+# Local env files. Never commit: API keys end up here.
+.env
+
+# JVM crash dumps from Gradle workers that ran out of memory.
+hs_err_pid*.log
+replay_pid*.log

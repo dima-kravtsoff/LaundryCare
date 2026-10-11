@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Closet Care</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#131720; --muted:#5b6472; --line:#e6e8ee;
+    --accent:#2f6df6; --accent-soft:#e8f0ff; --good:#12805c; --good-soft:#e3f5ec;
+    --warn:#b4530a; --warn-soft:#fdeede; --bad:#c02b2b; --bad-soft:#fdeaea;
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1115; --card:#171a21; --ink:#eef1f6; --muted:#9aa4b2; --line:#262b34;
+      --accent:#5b8cff; --accent-soft:#1b2540; --good:#4bd3a0; --good-soft:#12271f;
+      --warn:#f0a35b; --warn-soft:#2a2013; --bad:#f07070; --bad-soft:#2a1616;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding-bottom:env(safe-area-inset-bottom);
+  }
+  .app{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  header.top{
+    position:sticky;top:0;z-index:20;background:var(--bg);
+    padding:calc(env(safe-area-inset-top) + 14px) 18px 12px;
+    display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);
+  }
+  header.top .title{font-size:20px;font-weight:750;letter-spacing:-.02em;flex:1}
+  header.top .title small{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+  .iconbtn{
+    appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:40px;height:40px;border-radius:12px;display:grid;place-items:center;cursor:pointer;
+  }
+  .iconbtn:active{transform:scale(.95)}
+  .iconbtn svg{width:20px;height:20px}
+  main{flex:1;padding:16px 18px 40px}
+  .back{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--accent);
+    font-size:15px;font-weight:600;padding:6px 0;cursor:pointer;margin-bottom:6px}
+  .back svg{width:18px;height:18px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .banner{padding:14px 16px;border-radius:14px;margin-bottom:16px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+  .banner.info{background:var(--accent-soft);color:var(--ink)}
+  .banner b{font-weight:700}
+  .banner button{margin-top:8px}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .tile{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow);cursor:pointer;text-align:left;padding:0;color:inherit;
+  }
+  .tile:active{transform:scale(.985)}
+  .tile .thumb{width:100%;aspect-ratio:1/1;object-fit:cover;background:linear-gradient(135deg,#dfe4ee,#c9d2e2);display:block}
+  .tile .thumb.ph{display:grid;place-items:center;color:#94a0b4}
+  .tile .thumb.ph svg{width:40px;height:40px}
+  .tile .meta{padding:10px 12px}
+  .tile .meta .nm{font-weight:650;font-size:15px;letter-spacing:-.01em;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tile .meta .sub{color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .empty{text-align:center;padding:56px 20px;color:var(--muted)}
+  .empty svg{width:64px;height:64px;opacity:.4;margin-bottom:12px}
+  .empty h2{color:var(--ink);font-size:18px;margin:0 0 6px}
+
+  .btn{
+    appearance:none;border:none;border-radius:13px;padding:14px 18px;font-size:16px;font-weight:650;
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:var(--accent);color:#fff;letter-spacing:-.01em;
+  }
+  .btn svg{width:20px;height:20px}
+  .btn:active{transform:scale(.99)}
+  .btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+  .btn.danger{background:transparent;color:var(--bad);border:1px solid var(--line)}
+  .btn[disabled]{opacity:.5;pointer-events:none}
+  .btn.sm{padding:10px 14px;font-size:14px;width:auto}
+  .fab{position:fixed;left:0;right:0;bottom:0;padding:14px 18px calc(env(safe-area-inset-bottom) + 14px);
+    background:linear-gradient(to top,var(--bg) 60%,transparent);max-width:640px;margin:0 auto;z-index:15}
+
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:650;color:var(--muted);margin-bottom:7px;letter-spacing:.01em}
+  .field.unsure{background:var(--warn-soft);margin:0 -10px 16px;padding:10px 10px 11px;border-radius:12px}
+  .field.unsure > label{color:var(--warn)}
+  .field.unsure .input{border-color:var(--warn)}
+  .flag{float:right;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.05em;
+    background:var(--warn);color:var(--bg);padding:2px 7px;border-radius:20px}
+  .input,select.input,textarea.input{
+    width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);
+    color:var(--ink);font-size:16px;font-family:inherit;
+  }
+  textarea.input{min-height:64px;resize:vertical}
+  .input:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+
+  .photobox{
+    border:1.5px dashed var(--line);border-radius:14px;aspect-ratio:4/3;display:grid;place-items:center;
+    background:var(--card);cursor:pointer;overflow:hidden;position:relative;text-align:center;color:var(--muted);
+  }
+  .photobox img{width:100%;height:100%;object-fit:cover}
+  .photobox .ph{display:grid;place-items:center;gap:6px;padding:14px}
+  .photobox .ph svg{width:32px;height:32px;opacity:.6}
+  .photobox .ph span{font-size:13px;font-weight:600}
+  .photobox .badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;
+    font-weight:600;padding:4px 8px;border-radius:20px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+  .pcell{position:relative;aspect-ratio:1/1;border-radius:13px;overflow:hidden;background:var(--card);
+    border:1px solid var(--line);display:grid;place-items:center}
+  .pcell img{width:100%;height:100%;object-fit:cover;display:block}
+  .pcell.padd{border:1.5px dashed var(--line);cursor:pointer;color:var(--muted)}
+  .pcell.padd:active{transform:scale(.97)}
+  .pcell.padd .ph{display:grid;place-items:center;gap:5px;text-align:center}
+  .pcell.padd .ph svg{width:26px;height:26px;opacity:.6}
+  .pcell.padd .ph span{font-size:12px;font-weight:650}
+  .pcell .prm{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:none;
+    background:rgba(0,0,0,.6);color:#fff;font-size:17px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+  .pcell .pmain{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;
+    font-weight:700;padding:3px 7px;border-radius:20px;letter-spacing:.03em}
+  .cap{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+
+  .section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 2px 10px}
+
+  .rec{padding:16px;border-radius:var(--radius);margin-bottom:14px}
+  .rec .rec-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .rec .rec-head .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none}
+  .rec .rec-head h3{margin:0;font-size:17px;font-weight:750;letter-spacing:-.01em}
+  .rec .rec-head .mdl{font-size:12px;color:var(--muted);font-weight:500}
+  .rec.wash .ic{background:var(--accent-soft);color:var(--accent)}
+  .rec.dry .ic{background:var(--good-soft);color:var(--good)}
+  .rec .ic svg{width:22px;height:22px}
+  .setrow{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);gap:14px}
+  .setrow:first-of-type{border-top:none}
+  .setrow .k{color:var(--muted);font-size:14px;flex:none}
+  .setrow .v{font-weight:700;text-align:right;letter-spacing:-.01em}
+  .setrow .v .big{font-size:17px}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:650;
+    padding:4px 10px;border-radius:20px;margin:3px 3px 0 0}
+  .rec.dry .pill{background:var(--good-soft);color:var(--good)}
+
+  .note{display:flex;gap:9px;align-items:flex-start;font-size:14px;padding:10px 12px;border-radius:11px;margin-top:8px;line-height:1.45}
+  .note svg{width:17px;height:17px;flex:none;margin-top:2px}
+  .note.warn{background:var(--warn-soft);color:var(--warn)}
+  .note.bad{background:var(--bad-soft);color:var(--bad)}
+  .note.tip{background:var(--card);border:1px solid var(--line);color:var(--muted)}
+
+  .summary{padding:4px 16px 8px}
+  .srow{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line);align-items:center}
+  .srow:first-child{border-top:none}
+  .srow .si{width:30px;height:30px;flex:none;border-radius:9px;background:var(--bg);display:grid;place-items:center;color:var(--muted)}
+  .srow .si svg{width:17px;height:17px}
+  .srow .st{flex:1}
+  .srow .st .lab{font-size:12px;color:var(--muted);font-weight:600}
+  .srow .st .val{font-weight:600;letter-spacing:-.01em}
+
+  .spin{width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;
+    display:inline-block;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .loading{display:flex;flex-direction:column;align-items:center;gap:12px;padding:26px;color:var(--muted);text-align:center}
+  .loading .spin{width:26px;height:26px;color:var(--accent)}
+
+  .detailhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius);background:#c9d2e2;margin-bottom:8px}
+  .thumbstrip{display:flex;gap:8px;margin-bottom:4px}
+  .thumbstrip img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer}
+  .thumbstrip img.active{outline:2px solid var(--accent)}
+  h1.gname{font-size:24px;font-weight:780;letter-spacing:-.02em;margin:14px 0 2px}
+  .gsub{color:var(--muted);font-size:14px;margin-bottom:6px}
+
+  .machinebox{padding:14px 16px}
+  .machinebox .mrow{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
+  .machinebox .mrow .mk{color:var(--muted)}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);
+    padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow);z-index:50;opacity:0;
+    transition:opacity .2s, transform .2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+  .matchcard{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--card);
+    border:1px solid var(--line);box-shadow:var(--shadow);cursor:pointer;width:100%;text-align:left;color:inherit;margin-bottom:10px}
+  .matchcard.best{border-color:var(--accent);border-width:1.5px}
+  .matchcard:active{transform:scale(.99)}
+  .matchcard img.mth,.matchcard .ph2{width:64px;height:64px;border-radius:11px;object-fit:cover;flex:none;
+    background:linear-gradient(135deg,#dfe4ee,#c9d2e2)}
+  .matchcard .ph2{display:grid;place-items:center;color:#94a0b4}
+  .matchcard .ph2 svg{width:28px;height:28px}
+  .matchcard .mtxt{flex:1;min-width:0}
+  .matchcard .mnm{font-weight:700;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .matchcard .mrs{font-size:13px;color:var(--muted);line-height:1.35;margin-top:3px}
+  .matchcard .chev{color:var(--muted);flex:none}
+  .matchcard .chev svg{width:18px;height:18px}
+  .conf{display:inline-block;font-size:11px;font-weight:750;padding:3px 9px;border-radius:20px;
+    text-transform:uppercase;letter-spacing:.04em}
+  .conf.high{background:var(--good-soft);color:var(--good)}
+  .conf.medium{background:var(--warn-soft);color:var(--warn)}
+  .conf.low{background:var(--bad-soft);color:var(--bad)}
+  .queryprev{width:180px;aspect-ratio:1/1;object-fit:cover;border-radius:14px;display:block;margin:0 auto 8px;
+    border:1px solid var(--line)}
+  .hidden{display:none!important}
+  .muted{color:var(--muted)}
+  .center{text-align:center}
+  a{color:var(--accent)}
+  .kbd{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:6px}
+  details.help{margin-top:10px}
+  details.help summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
+  details.help ul{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title" id="hdrTitle">Closet Care<small id="hdrSub">Your wardrobe's wash &amp; dry guide</small></div>
+    <button class="iconbtn" id="tipsBtn" title="Laundry tips" aria-label="Laundry tips">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v4H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg>
+    </button>
+    <button class="iconbtn" id="settingsBtn" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   Closet Care — wardrobe + AI care-tag reader + snap-to-find
+   Machines are pre-configured for the owner's Bosch 500 Series pair.
+   ========================================================================= */
+
+/* ---------- Owner's machines (researched from Bosch manuals) ---------- */
+const WASHER = {
+  model:"Bosch WAT28401UC/14",
+  name:"Bosch 500 Series Compact Washer (24\")",
+  temps:["Cold","Warm","Hot","Extra Hot"],   // Extra Hot ≈ 60°C max
+  spins:["No Spin","Low","Med","High"],      // High = 1400 rpm
+  drumL:62, maxKg:8,                         // 2.2 cu ft; manual states 17.7 lb / 8 kg for cotton
+  programs:["Cotton Normal","Cotton Light Soil","Perm Press Light Soil","Perm Press Heavy Soil",
+            "Delicates","Hand Wash/Wool","Jeans","Towels","Sanitize","Bulky/Large Items",
+            "Quick 30","Rinse/Spin","Drum Clean","Drain"],
+  // Max load per program, straight from the WAT28401UC program selection table.
+  loads:{"Cotton Normal":"Full","Cotton Light Soil":"1/2","Perm Press Light Soil":"1/2",
+         "Perm Press Heavy Soil":"1/2","Delicates":"1/3","Hand Wash/Wool":"1/3","Jeans":"1/2",
+         "Towels":"1/2","Sanitize":"Full","Bulky/Large Items":"1 item","Quick 30":"1/2",
+         "Rinse/Spin":"Full"},
+  options:["SpeedPerfect","Prewash","Extra Rinse +1/+2"]
+};
+const DRYER = {
+  model:"Bosch WTG86401UC/01",
+  name:"Bosch 500 Series Compact Ventless Dryer (24\")",
+  drumL:113, maxKg:null, wetFactor:1.6,      // 4.0 cu ft; Bosch publishes no kg limit, so space decides
+  programs:["Cotton Dry","Cotton Extra Dry","Perm Press Damp","Perm Press Dry","Perm Press Extra Dry",
+            "Delicates","Quick 40","Quick Dry Auto","Time Dry Variable","Hand Wash/Wool",
+            "Air Fluff/No Heat","Towels","Sanitize","Jeans","Bulky/Large Items"],
+  // Max load per program, from the WTG86401UC program selection table.
+  loads:{"Cotton Dry":"Full","Cotton Extra Dry":"Full","Perm Press Damp":"1/2","Perm Press Dry":"1/2",
+         "Perm Press Extra Dry":"1/2","Delicates":"1/4","Quick 40":"1/3","Quick Dry Auto":"1/4",
+         "Time Dry Variable":"1/3","Hand Wash/Wool":"1/3","Air Fluff/No Heat":"1/3","Towels":"1/2",
+         "Sanitize":"1/2","Jeans":"1/2","Bulky/Large Items":"1 item"},
+  options:["Dry Level 0…+3","Low Heat","Wrinkle Block (anti-crease)","Time Dry","Finish In (delay)"]
+};
+/* Plain-language drum load, plus a caution when the program needs real headroom. */
+const LOAD_TEXT={"Full":"Full drum","1/2":"½ drum","1/3":"⅓ drum","1/4":"¼ drum","1 item":"One item at a time"};
+const FRAC_VALUE={"Full":1,"1/2":0.5,"1/3":1/3,"1/4":0.25};
+function loadInfo(machine,program){
+  const f=machine.loads&&machine.loads[program]; if(!f)return null;
+  return {frac:f,text:LOAD_TEXT[f]||f,tight:f==='1/3'||f==='1/4'||f==='1 item'};
+}
+
+/* Turning "⅓ drum" into something countable.
+   g  = typical dry weight; L = space it really takes loosely placed in a drum
+   (not its folded volume — clothes pack badly). Both are estimates, deliberately
+   conservative, and the UI says so. */
+const GARMENT_KINDS={
+  tshirt:{label:'T-shirts',g:175,L:3},        shirt:{label:'shirts',g:220,L:3.5},
+  jumper:{label:'jumpers',g:450,L:6},         jeans:{label:'pairs of jeans',g:700,L:5},
+  trousers:{label:'pairs of trousers',g:400,L:4}, dress:{label:'dresses',g:300,L:3.5},
+  underwear:{label:'pieces of underwear',g:60,L:0.8}, socks:{label:'pairs of socks',g:50,L:0.6},
+  towel:{label:'bath towels',g:650,L:6},      bedding:{label:'sheets',g:800,L:10},
+  jacket:{label:'jackets',g:800,L:10},        leggings:{label:'leggings',g:200,L:2},
+  other:{label:'items',g:250,L:3.5}
+};
+function garmentKind(care,name){
+  if(care&&care.garment_kind&&GARMENT_KINDS[care.garment_kind])return care.garment_kind;
+  const s=((name||'')+' '+((care&&care.fabric)||'')+' '+((care&&care.special_notes)||'')).toLowerCase();
+  if(/t-?shirt|\btee\b|\btees\b/.test(s))return'tshirt';
+  if(/jumper|sweater|knit|cardigan|pullover|hoodie|sweatshirt|fleece/.test(s))return'jumper';
+  if(/jeans|denim/.test(s))return'jeans';
+  if(/towel|terry|bathrobe/.test(s))return'towel';
+  if(/sheet|duvet|pillow|bedding|bed linen/.test(s))return'bedding';
+  if(/jacket|\bcoat\b|parka|anorak/.test(s))return'jacket';
+  if(/legging|tights|hosiery/.test(s))return'leggings';
+  if(/\bsock/.test(s))return'socks';
+  if(/underwear|briefs|boxer|\bbra\b|knickers|lingerie/.test(s))return'underwear';
+  if(/dress|skirt/.test(s))return'dress';
+  if(/trouser|\bpants\b|chino|shorts/.test(s))return'trousers';
+  if(/shirt|blouse|oxford/.test(s))return'shirt';
+  return'other';
+}
+/* How many of `kind` fit, limited by drum space and (where published) weight. */
+function fitCount(machine,frac,kind){
+  if(frac==='1 item')return 1;
+  const fv=FRAC_VALUE[frac]; if(!fv)return null;
+  const k=GARMENT_KINDS[kind]||GARMENT_KINDS.other;
+  const bulk=machine.wetFactor||1;                       // wet laundry needs more tumbling room
+  const byVolume=Math.floor((machine.drumL*fv)/(k.L*bulk));
+  const byWeight=machine.maxKg?Math.floor((machine.maxKg*1000*fv)/k.g):Infinity;
+  const n=Math.min(byVolume,byWeight);
+  return n>=1?n:1;
+}
+
+/* ---------- tiny helpers ---------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,a={},...c)=>{const n=document.createElement(t);
+  for(const k in a){
+    const v=a[k];
+    // null / undefined / false means "omit this attribute" — critical for boolean
+    // attributes like `disabled`, where setAttribute('disabled', null) would still disable.
+    if(v==null||v===false)continue;
+    if(k==='class')n.className=v;
+    else if(k==='html')n.innerHTML=v;
+    else if(k.startsWith('on'))n.addEventListener(k.slice(2),v);
+    else n.setAttribute(k,v);
+  }
+  c.flat().forEach(x=>n.append(x&&x.nodeType?x:document.createTextNode(x==null?'':x)));return n;};
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+/* ---------- settings (localStorage) ---------- */
+const LS_KEY='cc_gemini_key', LS_MODEL='cc_gemini_model';
+const getKey=()=>localStorage.getItem(LS_KEY)||'';
+const setKey=v=>localStorage.setItem(LS_KEY,v.trim());
+const DEFAULT_MODEL='gemini-3.8-flash';
+const getModel=()=>localStorage.getItem(LS_MODEL)||DEFAULT_MODEL;
+const setModel=v=>localStorage.setItem(LS_MODEL,(v||'').trim()||DEFAULT_MODEL);
+
+/* ---------- IndexedDB ---------- */
+let _db;
+function db(){
+  return _db?Promise.resolve(_db):new Promise((res,rej)=>{
+    const r=indexedDB.open('closetcare',1);
+    r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('garments'))d.createObjectStore('garments',{keyPath:'id'});};
+    r.onsuccess=e=>{_db=e.target.result;res(_db);};
+    r.onerror=e=>rej(e.target.error);
+  });
+}
+/* Garments used to hold one `garmentPhoto` + one `tagPhoto`; they now hold arrays.
+   Migrate on read so closets saved by earlier versions keep working untouched. */
+function migrate(g){
+  if(!g)return g;
+  if(!Array.isArray(g.garmentPhotos))g.garmentPhotos=g.garmentPhoto?[g.garmentPhoto]:[];
+  if(!Array.isArray(g.tagPhotos))g.tagPhotos=g.tagPhoto?[g.tagPhoto]:[];
+  return g;
+}
+const coverPhoto=g=>(g.garmentPhotos&&g.garmentPhotos[0])||(g.tagPhotos&&g.tagPhotos[0])||null;
+const allPhotos=g=>[...(g.garmentPhotos||[]),...(g.tagPhotos||[])];
+
+async function dbAll(){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('garments').objectStore('garments').getAll();t.onsuccess=()=>res(t.result.map(migrate).sort((a,b)=>b.createdAt-a.createdAt));t.onerror=()=>rej(t.error);});}
+async function dbGet(id){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('garments').objectStore('garments').get(id);t.onsuccess=()=>res(migrate(t.result));t.onerror=()=>rej(t.error);});}
+async function dbPut(o){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('garments','readwrite').objectStore('garments').put(o);t.onsuccess=()=>res();t.onerror=()=>rej(t.error);});}
+async function dbDel(id){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('garments','readwrite').objectStore('garments').delete(id);t.onsuccess=()=>res();t.onerror=()=>rej(t.error);});}
+
+/* ---------- image utils ---------- */
+async function compress(file,maxDim=1568,q=0.82){
+  try{
+    const bmp=await createImageBitmap(file);
+    let{width:w,height:h}=bmp;
+    if(Math.max(w,h)>maxDim){const r=maxDim/Math.max(w,h);w=Math.round(w*r);h=Math.round(h*r);}
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    c.getContext('2d').drawImage(bmp,0,0,w,h);bmp.close&&bmp.close();
+    return await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+  }catch(e){return file;}
+}
+const urlCache=new Map();
+function objURL(blob){if(!blob)return'';if(!urlCache.has(blob))urlCache.set(blob,URL.createObjectURL(blob));return urlCache.get(blob);}
+function blobB64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);});}
+
+/* =========================================================================
+   Gemini care-tag reader
+   ========================================================================= */
+const CARE_SCHEMA={
+  type:"OBJECT",
+  properties:{
+    garment_guess:{type:"STRING",description:"Short name for the garment e.g. 'Navy cotton crewneck t-shirt'"},
+    fabric:{type:"STRING",description:"Fiber content from the tag e.g. '100% cotton', empty if not shown"},
+    machine_wash:{type:"BOOLEAN"},
+    hand_wash:{type:"BOOLEAN"},
+    do_not_wash:{type:"BOOLEAN"},
+    wash_temp_c:{type:"INTEGER",description:"Max wash temperature in Celsius if shown by number or dots; else null",nullable:true},
+    wash_action:{type:"STRING",enum:["normal","permanent_press","gentle"],description:"Bars under the wash tub: none=normal, one=permanent_press, two=gentle",nullable:true},
+    bleach:{type:"STRING",enum:["any","non_chlorine","none"],nullable:true},
+    tumble_dry:{type:"BOOLEAN"},
+    do_not_tumble_dry:{type:"BOOLEAN"},
+    tumble_heat:{type:"STRING",enum:["no_heat","low","medium","high"],description:"Dots inside the tumble-dry circle: one=low, two=medium/normal, three=high, filled=no_heat",nullable:true},
+    natural_dry:{type:"STRING",enum:["line","flat","drip","line_shade","flat_shade"],description:"Only if tumble drying is not allowed",nullable:true},
+    iron:{type:"STRING",enum:["none","low","medium","high"],nullable:true},
+    dry_clean:{type:"STRING",enum:["any","do_not","petroleum","pce","gentle"],nullable:true},
+    special_notes:{type:"STRING",description:"Any written instructions or fabric keywords: wool, silk, denim, towel, 'wash inside out', 'wash with like colors', etc."},
+    garment_kind:{type:"STRING",enum:["tshirt","shirt","jumper","jeans","trousers","dress","underwear","socks","towel","bedding","jacket","leggings","other"],
+      description:"What kind of item this is, from the garment photo — used to estimate how many fit in a load.",nullable:true},
+    low_confidence:{type:"ARRAY",items:{type:"STRING",enum:["wash_temp_c","wash_action","bleach","tumble_heat","natural_dry","iron","dry_clean","fabric"]},
+      description:"Field names you INFERRED or guessed rather than clearly read. Be honest — an empty list means every value was plainly legible."}
+  },
+  required:["machine_wash","hand_wash","do_not_wash","tumble_dry","do_not_tumble_dry","low_confidence"]
+};
+const CARE_PROMPT=`You are a laundry care-label expert. Look at the photo(s). One is a garment; one is its sewn-in CARE LABEL / tag.
+Read every international (ISO 3758 / GINETEX) and North American (ASTM D5489) laundry symbol AND any printed text, then fill the JSON.
+
+Rules for reading symbols:
+- Wash tub = washing. A number inside = max °C. Dots inside: 1 dot≈30°C, 2≈40, 3≈50, 4≈60, 5≈70, 6≈95. A hand in the tub = hand_wash only. Tub crossed out = do_not_wash.
+- Bars under the wash tub = mechanical action: no bar = "normal", one bar = "permanent_press", two bars = "gentle".
+- Triangle = bleach: empty = "any", two diagonal lines = "non_chlorine", crossed = "none".
+- Square with a circle = tumble dry. Dots: 1 = low heat, 2 = medium/normal, 3 = high. Filled circle = no_heat. Circle crossed out = do_not_tumble_dry.
+- Plain square symbols = natural drying (only relevant when tumble drying is not allowed): vertical line inside = "line" (hang), horizontal line = "flat", three vertical lines = "drip", added diagonal in corner = shade variants.
+- Iron symbol dots: 1 = low, 2 = medium, 3 = high; crossed = none.
+- Circle = dry cleaning: letter inside (F/P/W) = "petroleum"/"pce"/"gentle"; crossed = "do_not".
+Put fiber content in "fabric" and any words like wool, silk, denim, cashmere, towel, or written phrases in "special_notes".
+If a value truly cannot be determined, use null (for the nullable fields).
+
+BE HONEST ABOUT WHAT YOU COULD NOT SEE. The bars under the wash tub are small and are the single most
+misread detail on a care label — if the image is blurred, angled, low-resolution, overexposed or the
+bars are not plainly countable, say so by listing "wash_action" in low_confidence rather than guessing.
+The same goes for counting dots inside the tumble-dry circle or the iron. List in "low_confidence" every
+field you inferred from context, fibre type or likelihood instead of plainly reading it. Listing nothing
+claims you read every value clearly, so only do that when it is true.
+
+Return ONLY the JSON object.`;
+
+const GEMINI_BASE='https://generativelanguage.googleapis.com/v1beta';
+
+/* Ask the key itself which models it may run — authoritative, so model renames
+   and access changes can never strand the app on a dead name again. */
+async function listModels(){
+  const key=getKey(); if(!key) throw new Error('No Gemini API key set. Open Settings and paste your key.');
+  let r;
+  try{ r=await fetch(`${GEMINI_BASE}/models?pageSize=1000&key=${encodeURIComponent(key)}`); }
+  catch(e){ throw new Error('Network error reaching Gemini. Check your connection.'); }
+  if(!r.ok) throw await geminiError(r,null);
+  const j=await r.json();
+  return (j.models||[])
+    .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
+    .map(m=>({id:String(m.name||'').replace(/^models\//,''),label:m.displayName||'',desc:m.description||''}))
+    .filter(m=>m.id && !/embed|aqa|imagen|veo|tts|audio|image-generation|learnlm/i.test(m.id))
+    .sort((a,b)=>scoreModel(b.id)-scoreModel(a.id));
+}
+/* Prefer the newest plain Flash: fast, cheap, vision-capable, stable. */
+function scoreModel(id){
+  let s=0;
+  const v=parseFloat((id.match(/gemini-(\d+(?:\.\d+)?)/)||[])[1]||'0'); s+=v*10;
+  if(/flash/i.test(id))s+=30; else if(/pro/i.test(id))s+=15;
+  if(/lite/i.test(id))s-=8;
+  if(/preview|exp|experimental|thinking/i.test(id))s-=12;
+  if(/latest/i.test(id))s-=2;
+  return s;
+}
+function pickBestModel(ids){ return ids.slice().sort((a,b)=>scoreModel(b)-scoreModel(a))[0]||null; }
+
+async function geminiError(r,model){
+  let detail=''; try{const j=await r.json();detail=j.error&&j.error.message?j.error.message:JSON.stringify(j);}catch(_){try{detail=await r.text();}catch(__){}}
+  if(r.status===400 && /API key not valid/i.test(detail)) return new Error('That Gemini API key was rejected. Double-check it in Settings.');
+  if(r.status===403) return new Error('Your key was refused (403). The Generative Language API may not be enabled for its project, or the key is restricted. ' + detail.slice(0,160));
+  if(r.status===404) return new Error(model
+    ? `Your key can’t use "${model}". Open Settings → Check key & list models to pick one it can.`
+    : 'Not found (404). Open Settings → Check key & list models.');
+  if(r.status===429) return new Error('Gemini rate limit / quota reached. Wait a moment and try again.');
+  return new Error('Gemini error '+r.status+': '+detail.slice(0,300));
+}
+function postGemini(model,parts,schema,key){
+  const body={contents:[{role:'user',parts}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:schema}};
+  return fetch(`${GEMINI_BASE}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+}
+async function parseGemini(r){
+  const j=await r.json();
+  const txt=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
+  if(!txt) throw new Error('Gemini returned no readable result. Try a clearer, well-lit photo.');
+  try{return JSON.parse(txt);}catch(_){const m=txt.match(/\{[\s\S]*\}/);if(!m)throw new Error('Could not parse the AI response.');return JSON.parse(m[0]);}
+}
+/* One request path for both features, with self-healing on 404:
+   if the saved model is gone, find one the key can run, switch to it and retry. */
+async function geminiGenerate(parts,schema){
+  const key=getKey(); if(!key) throw new Error('No Gemini API key set. Open Settings and paste your key.');
+  const model=getModel();
+  let r;
+  try{ r=await postGemini(model,parts,schema,key); }
+  catch(e){ throw new Error('Network error reaching Gemini. Check your connection.'); }
+  if(r.status===404){
+    let alt=null;
+    try{ const ms=await listModels(); alt=pickBestModel(ms.map(m=>m.id)); }catch(_){}
+    if(alt&&alt!==model){
+      let r2;
+      try{ r2=await postGemini(alt,parts,schema,key); }catch(e){ throw new Error('Network error reaching Gemini. Check your connection.'); }
+      if(r2.ok){ setModel(alt); toast('Switched to '+alt); return await parseGemini(r2); }
+      throw await geminiError(r2,alt);
+    }
+  }
+  if(!r.ok) throw await geminiError(r,model);
+  return await parseGemini(r);
+}
+
+/* Accepts arrays (or a single blob, for older callers). All tag photos go in one
+   request so the model can merge labels that are split across several tags. */
+async function geminiReadTag(tagBlobs, garmentBlobs){
+  const tags=(Array.isArray(tagBlobs)?tagBlobs:[tagBlobs]).filter(Boolean);
+  const gars=(Array.isArray(garmentBlobs)?garmentBlobs:[garmentBlobs]).filter(Boolean);
+  if(!tags.length) throw new Error('Add at least one photo of the care tag first.');
+  const parts=[{text:CARE_PROMPT}];
+  if(gars.length){
+    parts.push({text:`THE GARMENT (${gars.length} photo${gars.length>1?'s':''}, for naming it):`});
+    for(const b of gars.slice(0,3))parts.push({inline_data:{mime_type:'image/jpeg',data:await blobB64(b)}});
+  }
+  parts.push({text:tags.length>1
+    ? `THE CARE LABELS — ${tags.length} photos of this ONE garment's tags. They may show different parts (fibre content on one, symbols on another) or the same tag twice. Read them ALL and merge into a single care profile; if two disagree, prefer the clearer image.`
+    : "THE CARE LABEL / tag (read this carefully):"});
+  for(const b of tags)parts.push({inline_data:{mime_type:'image/jpeg',data:await blobB64(b)}});
+  return normalizeCare(await geminiGenerate(parts,CARE_SCHEMA));
+}
+function normalizeCare(c){
+  c=c||{};
+  const b=v=>v===true||v==='true';
+  return {
+    garment_guess:c.garment_guess||'', fabric:c.fabric||'',
+    machine_wash:b(c.machine_wash), hand_wash:b(c.hand_wash), do_not_wash:b(c.do_not_wash),
+    wash_temp_c:(c.wash_temp_c==null||c.wash_temp_c===''?null:parseInt(c.wash_temp_c,10)),
+    wash_action:c.wash_action||null, bleach:c.bleach||null,
+    tumble_dry:b(c.tumble_dry), do_not_tumble_dry:b(c.do_not_tumble_dry),
+    tumble_heat:c.tumble_heat||null, natural_dry:c.natural_dry||null,
+    iron:c.iron||null, dry_clean:c.dry_clean||null, special_notes:c.special_notes||'',
+    garment_kind:c.garment_kind||null,
+    low_confidence:Array.isArray(c.low_confidence)?c.low_confidence.filter(x=>typeof x==='string'):[]
+  };
+}
+function blankCare(){return{garment_guess:'',fabric:'',machine_wash:true,hand_wash:false,do_not_wash:false,wash_temp_c:null,wash_action:'normal',bleach:'non_chlorine',tumble_dry:true,do_not_tumble_dry:false,tumble_heat:'low',natural_dry:null,iron:'medium',dry_clean:null,special_notes:'',low_confidence:[]};}
+const FIELD_LABEL={wash_temp_c:'Max wash temperature',wash_action:'Wash action (bars under the tub)',bleach:'Bleach',
+  tumble_heat:'Tumble heat',natural_dry:'Air-dry method',iron:'Ironing',fabric:'Fabric'};
+const isUnsure=(c,f)=>!!(c&&c.low_confidence&&c.low_confidence.indexOf(f)>=0);
+function clearUnsure(c,f){ if(c&&c.low_confidence)c.low_confidence=c.low_confidence.filter(x=>x!==f); }
+
+/* =========================================================================
+   Gemini "snap it to find it" — match a photo against the saved closet
+   ========================================================================= */
+const MAX_MATCH_ITEMS=30;
+const MATCH_SCHEMA={
+  type:"OBJECT",
+  properties:{
+    candidates:{
+      type:"ARRAY",
+      description:"Up to 3 closet items that could be the photographed garment, best first.",
+      items:{type:"OBJECT",properties:{
+        index:{type:"INTEGER",description:"The Item number from the closet list"},
+        confidence:{type:"STRING",enum:["high","medium","low"]},
+        reason:{type:"STRING",description:"One short sentence on what matched or differed (colour, pattern, type, details)."}
+      },required:["index","confidence","reason"]}
+    },
+    no_match:{type:"BOOLEAN",description:"True if none of the closet items plausibly match the photo."}
+  },
+  required:["candidates","no_match"]
+};
+const MATCH_PROMPT=`You identify which saved garment a new photo shows.
+You get one PHOTO TO IDENTIFY, then a numbered CLOSET list — each item has a name, often a reference photo, and sometimes fabric/notes.
+
+Compare on: garment type (t-shirt vs sweater vs trousers), colour, pattern, knit/weave texture, collar and sleeve style, buttons, prints, logos, and any distinctive details.
+Allow for different lighting, angle, wrinkles, folding, and background — the same garment can look quite different photographed on a hanger vs crumpled in a laundry basket. Judge the garment itself, not the setting.
+
+Return up to 3 candidates ranked best-first, using the Item numbers exactly as given.
+Set confidence honestly: "high" only when distinctive features clearly agree; "medium" when the type and colour match but details are unclear; "low" for a weak guess.
+If nothing in the closet plausibly matches, set no_match to true and return an empty candidates list. Do not invent an Item number that was not listed.
+Return ONLY the JSON object.`;
+
+async function geminiMatchGarment(queryBlob, garments){
+  if(!getKey()) throw new Error('No Gemini API key set. Open Settings and paste your key.');
+  if(!garments.length) throw new Error('Your closet is empty — add a garment first.');
+  const list=garments.slice(0,MAX_MATCH_ITEMS);
+  const parts=[{text:MATCH_PROMPT},{text:'PHOTO TO IDENTIFY:'},
+    {inline_data:{mime_type:'image/jpeg',data:await blobB64(await compress(queryBlob,768,0.78))}},
+    {text:`CLOSET — ${list.length} saved item(s):`}];
+  for(let i=0;i<list.length;i++){
+    const g=list[i], c=g.care||{};
+    let label=`Item ${i}: "${g.name||'Untitled'}"`;
+    if(c.fabric)label+=` — fabric: ${c.fabric}`;
+    if(c.special_notes)label+=` — notes: ${c.special_notes}`;
+    parts.push({text:label});
+    // One reference photo per garment keeps the request a predictable size.
+    const ref=(g.garmentPhotos||[])[0];
+    if(ref)parts.push({inline_data:{mime_type:'image/jpeg',data:await blobB64(await compress(ref,512,0.7))}});
+    else if((g.tagPhotos||[]).length)parts.push({text:'(no garment photo saved — only its care tag; match by name/description)'});
+    else parts.push({text:'(no photo saved — match by name/description only)'});
+  }
+  let out;
+  try{ out=await geminiGenerate(parts,MATCH_SCHEMA); }
+  catch(e){ throw /413|Too much image/.test(e.message)?new Error('Too much image data for one request. Try again with a smaller closet.'):e; }
+  const seen=new Set(), cands=[];
+  (out.candidates||[]).forEach(c=>{
+    const i=parseInt(c.index,10);
+    if(!Number.isInteger(i)||i<0||i>=list.length||seen.has(i))return;
+    seen.add(i);
+    cands.push({garment:list[i],confidence:['high','medium','low'].includes(c.confidence)?c.confidence:'low',reason:c.reason||''});
+  });
+  return {candidates:cands.slice(0,3),no_match:!!out.no_match||cands.length===0,truncated:garments.length>MAX_MATCH_ITEMS};
+}
+
+/* =========================================================================
+   Care → machine-setting mapping (for the owner's Bosch pair)
+   ========================================================================= */
+function washTempLabel(c,action){
+  if(c==null)return action==='gentle'?'Cold':'Warm';
+  if(c<=30)return'Cold'; if(c<=45)return'Warm'; if(c<=55)return'Hot'; return'Extra Hot';
+}
+/* Mesh bags solve INTERACTION problems — one garment harming another, or a garment
+   wrecking itself by tangling. They don't make a harsher cycle safe and they don't
+   create capacity. Stay silent for robust things like tees, jeans and towels. */
+function bagAdvice(care,kind,name){
+  const s=((name||'')+' '+((care&&care.fabric)||'')+' '+((care&&care.special_notes)||'')).toLowerCase();
+  if(/tights|hosiery|stocking|pantyhose/.test(s))return 'Use a mesh bag — tights ladder and knot themselves around everything else in the drum.';
+  if(/\bbra\b|\bbras\b|lingerie|underwire/.test(s))return 'Use a mesh bag, hooks fastened — hooks snag knitwear and a loose underwire can jam the drum or pump.';
+  if(/velcro|hook-and-loop/.test(s))return 'Use a mesh bag — Velcro shreds knitwear on contact.';
+  if(/camisole|slip dress|spaghetti strap|thin strap/.test(s))return 'Use a mesh bag — thin straps stretch and wrap around other items.';
+  if(/silk|lace|chiffon|organza/.test(s))return 'Use a mesh bag — fine weaves catch on zips and seams.';
+  if(kind==='underwear')return 'Worth a mesh bag — hooks and thin straps snag and stretch.';
+  if(kind==='socks')return 'Worth a mesh bag — you get pairs back and nothing hides in the door seal.';
+  if(kind==='jumper'&&/wool|cashmere|merino|mohair|angora|alpaca/.test(s))return 'Worth a mesh bag — limits stretching and rubbing against coarser items.';
+  if(/drawstring|tie waist|wrap dress|apron/.test(s))return 'Worth a mesh bag — long ties tangle and get pulled out.';
+  return null;   // tees, shirts, jeans, towels, bedding: nothing to gain
+}
+/* Dye-bleed risk → colour catcher. */
+function dyeAdvice(care,kind,name){
+  const s=((name||'')+' '+((care&&care.fabric)||'')+' '+((care&&care.special_notes)||'')).toLowerCase();
+  if(/wash separately|wash alone|like colou?rs|similar colou?rs|may bleed|bleeds?\b/.test(s))
+    return 'The tag warns this can bleed. Wash it separately, or drop a colour-catcher sheet in loose if you must mix.';
+  if(kind==='jeans'||/denim|indigo/.test(s))
+    return 'Dark denim sheds indigo for its first several washes — wash separately, or add a colour-catcher sheet.';
+  if(/\bred\b|crimson|burgundy|scarlet|maroon/.test(s))
+    return 'Reds bleed more than any other colour. A colour-catcher sheet is cheap insurance when mixing.';
+  if(/\bblack\b|navy|charcoal|\bdark\b/.test(s))
+    return 'New dark items shed dye for the first few washes — a colour-catcher sheet protects lighter things in the load.';
+  return null;
+}
+function recommendWash(care,name){
+  const s=(care.special_notes+' '+care.fabric).toLowerCase();
+  const out={program:null,temp:null,spin:null,options:[],notes:[],warnings:[],kind:garmentKind(care,name)};
+  if(care.do_not_wash){
+    out.warnings.push('The tag says DO NOT WASH. Don’t put this in the washer.');
+    if(care.dry_clean&&care.dry_clean!=='do_not')out.notes.push('Take it to a professional dry cleaner instead.');
+    return out;
+  }
+  if(care.dry_clean&&care.dry_clean!=='do_not'&&!care.machine_wash&&!care.hand_wash){
+    out.warnings.push('Dry clean only — do not machine wash. Take it to a professional cleaner.');
+    return out;
+  }
+  let prog,reason,alt;
+  if(/wool|cashmere|merino|angora|mohair/.test(s)){prog='Hand Wash/Wool';reason='wool / delicate animal fibre';}
+  else if(care.hand_wash&&!care.machine_wash){prog='Hand Wash/Wool';reason='tag shows hand-wash only';}
+  else if(/\bdenim|jeans\b/.test(s)){prog='Jeans';reason='denim';}
+  else if(/towel|terry|bathrobe/.test(s)){prog='Towels';reason='towelling';}
+  else if(care.wash_action==='gentle'){prog='Delicates';reason='gentle-wash symbol (two bars under the tub)';}
+  else if(care.wash_action==='permanent_press'){prog='Perm Press Light Soil';reason='permanent-press symbol (one bar under the tub)';}
+  else {prog='Cotton Normal';reason='normal-wash symbol';alt='Use Cotton Light Soil for small or lightly-soiled loads.';}
+  out.program=prog;out.programReason=reason;if(alt)out.notes.push(alt);
+  out.temp=washTempLabel(care.wash_temp_c,care.wash_action);
+  if(care.wash_temp_c!=null)out.tempReason=`tag max ≈ ${care.wash_temp_c}°C`;
+  if(prog==='Delicates'||prog==='Hand Wash/Wool')out.spin='Low';
+  else if(prog==='Perm Press Light Soil')out.spin='Med';
+  else out.spin='High';
+  if(prog==='Cotton Normal'||prog==='Towels')out.options.push('SpeedPerfect (optional, to shorten)');
+  if(care.bleach==='none')out.warnings.push('Do NOT use bleach on this garment.');
+  else if(care.bleach==='non_chlorine')out.notes.push('Non-chlorine bleach only — that means an oxygen bleach (sodium percarbonate, the OxiClean type), never chlorine. Oxygen bleach needs warmth to work, so it does little in a cold wash; pre-soak in warm water instead.');
+  out.extras=[];
+  const bag=bagAdvice(care,out.kind,name); if(bag)out.extras.push({icon:'bag',text:bag});
+  const dye=dyeAdvice(care,out.kind,name); if(dye)out.extras.push({icon:'drop',text:dye});
+  if(/inside out/.test(s))out.notes.push('Turn the garment inside out before washing.');
+  if(/like colou?rs|similar colou?rs|wash separately|wash alone/.test(s))out.notes.push('Wash with like colours (or separately) — it may bleed.');
+  return out;
+}
+function recommendDry(care,name){
+  const s=(care.special_notes+' '+care.fabric).toLowerCase();
+  const out={mode:'machine',program:null,heat:null,options:[],notes:[],warnings:[],naturalText:null,kind:garmentKind(care,name)};
+  const natMap={line:'Hang it up to dry (line dry).',flat:'Lay it flat to dry — don’t hang it.',drip:'Drip dry — hang it up dripping wet, without spinning.',line_shade:'Hang to dry in the shade, out of direct sun.',flat_shade:'Lay flat to dry in the shade.'};
+  if(/wool|cashmere|merino|angora|mohair/.test(s)&&!care.tumble_dry){
+    out.mode='air';out.naturalText='Lay flat to dry to keep its shape.';
+    out.notes.push('Tip: the dryer’s “Hand Wash/Wool” program only fluffs/refreshes wool — it won’t fully dry it. Lay flat after.');
+    return out;
+  }
+  if(care.do_not_tumble_dry||(care.tumble_dry===false&&care.natural_dry)){
+    out.mode='air';
+    out.warnings.push('The tag says DO NOT tumble dry.');
+    out.naturalText=natMap[care.natural_dry]||'Air dry — do not use the dryer.';
+    out.notes.push('For a quick freshen-up only, the dryer’s “Air Fluff/No Heat” uses no heat — but air-dry to finish.');
+    return out;
+  }
+  const heat=care.tumble_heat||'low';
+  let prog,low=false;
+  if(/\bdenim|jeans\b/.test(s)){prog='Jeans';}
+  else if(/towel|terry|bathrobe/.test(s)){prog='Towels';}
+  else if(heat==='no_heat'){prog='Air Fluff/No Heat';}
+  else if(heat==='low'){prog='Delicates';low=true;}
+  else if(heat==='medium'){prog='Perm Press Dry';}
+  else{prog='Cotton Dry';}
+  out.program=prog;out.heat=heat;
+  if(heat==='low'&&prog!=='Delicates'&&prog!=='Air Fluff/No Heat')out.options.push('Low Heat');
+  if(prog==='Delicates')out.options.push('Low Heat (built in)');
+  out.options.push('Wrinkle Block — if you won’t unload right away');
+  out.heatLabel={no_heat:'No heat (air only)',low:'Low heat',medium:'Medium heat',high:'High heat'}[heat]||'Low heat';
+  if(low)out.notes.push('Low heat + Delicates protects stretch and prints.');
+  return out;
+}
+function careSummary(care){
+  const rows=[];
+  const I={wash:svgWash(),temp:svgTemp(),bleach:svgBleach(),dry:svgDry(),iron:svgIron(),clean:svgClean(),fabric:svgFabric()};
+  if(care.fabric)rows.push([I.fabric,'Fabric',care.fabric]);
+  let w = care.do_not_wash?'Do not wash':care.hand_wash&&!care.machine_wash?'Hand wash only':'Machine washable';
+  rows.push([I.wash,'Washing',w]);
+  if(!care.do_not_wash){
+    let t=care.wash_temp_c!=null?`Max ${care.wash_temp_c}°C`:'No temp limit shown';
+    const act={normal:'normal',permanent_press:'permanent press',gentle:'gentle/delicate'}[care.wash_action];
+    rows.push([I.temp,'Wash temp & action',t+(act?` · ${act}`:'')]);
+  }
+  rows.push([I.bleach,'Bleach',{any:'Any bleach OK',non_chlorine:'Non-chlorine only',none:'Do not bleach'}[care.bleach]||'Not specified']);
+  let d = care.do_not_tumble_dry?'Do not tumble dry':care.tumble_dry?('Tumble dry — '+({no_heat:'no heat',low:'low heat',medium:'medium heat',high:'high heat'}[care.tumble_heat]||'heat OK')):(care.natural_dry?'Air dry':'Not specified');
+  rows.push([I.dry,'Drying',d]);
+  rows.push([I.iron,'Ironing',{none:'Do not iron',low:'Low (1 dot)',medium:'Medium (2 dots)',high:'High (3 dots)'}[care.iron]||'Not specified']);
+  if(care.dry_clean)rows.push([I.clean,'Dry clean',{any:'Dry-clean safe',do_not:'Do not dry clean',petroleum:'Dry clean (petroleum solvent)',pce:'Dry clean (PCE solvent)',gentle:'Dry clean (gentle)'}[care.dry_clean]]);
+  if(care.special_notes)rows.push([svgNote(),'Notes',care.special_notes]);
+  return rows;
+}
+
+/* ---------- inline SVGs ---------- */
+const S=(p,vb='0 0 24 24')=>`<svg viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const svgWash=()=>S('<path d="M4 4h16v16H4z"/><path d="M4 9h16"/><circle cx="12" cy="14.5" r="3.5"/><circle cx="7" cy="6.5" r=".4" fill="currentColor"/>');
+const svgTemp=()=>S('<path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/>');
+const svgBleach=()=>S('<path d="M12 3 3 20h18z"/>');
+const svgDry=()=>S('<path d="M4 4h16v16H4z"/><circle cx="12" cy="12" r="4"/>');
+const svgIron=()=>S('<path d="M3 15a6 9 0 0 1 6-6h11v6z"/><path d="M3 15v3h17"/>');
+const svgClean=()=>S('<circle cx="12" cy="12" r="9"/>');
+const svgFabric=()=>S('<path d="M4 6l4-2 4 2 4-2 4 2v12l-4 2-4-2-4 2-4-2z"/>');
+const svgNote=()=>S('<path d="M4 4h16v12l-4 4H4z"/><path d="M16 20v-4h4"/>');
+const svgShirt=()=>S('<path d="M6 4l3-1a3 3 0 0 0 6 0l3 1 3 4-3 2v9H6v-9L3 8z"/>');
+const svgCamera=()=>S('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>');
+const svgPlus=()=>S('<path d="M12 5v14M5 12h14"/>');
+const svgBack=()=>S('<path d="M15 18l-6-6 6-6"/>');
+const svgTrash=()=>S('<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>');
+const svgSpark=()=>S('<path d="M12 3l1.9 4.6L18.5 9l-4.6 1.4L12 15l-1.9-4.6L5.5 9l4.6-1.4z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>');
+const svgWarn=()=>S('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>');
+const svgCheck=()=>S('<path d="M20 6 9 17l-5-5"/>');
+const svgTip=()=>S('<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>');
+const svgSnow=()=>S('<path d="M12 2v20M4 6l16 12M20 6 4 18"/>');
+const svgChev=()=>S('<path d="M9 18l6-6-6-6"/>');
+const svgPencil=()=>S('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>');
+const svgBag=()=>S('<path d="M6 7h12l1.5 13a1 1 0 0 1-1 1.1H5.5a1 1 0 0 1-1-1.1z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>');
+const svgDrop=()=>S('<path d="M12 3s6 6.3 6 10a6 6 0 0 1-12 0c0-3.7 6-10 6-10z"/>');
+const svgBook=()=>S('<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v4H6.5A2.5 2.5 0 0 1 4 19.5z"/>');
+const svgCopy=()=>S('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>');
+const svgScan=()=>S('<path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="3.2"/>');
+const svgWind=()=>S('<path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3"/>');
+
+/* =========================================================================
+   State + navigation
+   ========================================================================= */
+const state={view:'home',garments:[],current:null,draft:null,match:null,modelCheck:null,pick:null};
+function nav(v,extra){Object.assign(state,{view:v},extra||{});render();window.scrollTo(0,0);}
+$('#settingsBtn').addEventListener('click',()=>nav('settings'));
+$('#tipsBtn').addEventListener('click',()=>nav('tips'));
+$('#hdrTitle').addEventListener('click',()=>nav('home'));
+
+async function boot(){
+  try{state.garments=await dbAll();}catch(e){console.error(e);}
+  render();
+}
+function setHeader(title,sub){$('#hdrTitle').childNodes[0].nodeValue=title;$('#hdrSub').textContent=sub||'';}
+
+function render(){
+  const m=$('#main');m.innerHTML='';
+  if(state.view==='home')renderHome(m);
+  else if(state.view==='add')renderAdd(m);
+  else if(state.view==='detail')renderDetail(m);
+  else if(state.view==='match')renderMatch(m);
+  else if(state.view==='pick')renderPick(m);
+  else if(state.view==='tips')renderTips(m);
+  else if(state.view==='settings')renderSettings(m);
+}
+
+/* ---------- HOME ---------- */
+function renderHome(m){
+  setHeader('Closet Care','Your wardrobe’s wash & dry guide');
+  if(!getKey()){
+    const b=el('div',{class:'banner info'});
+    b.append(el('div',{},el('div',{html:'<b>One-time setup:</b> add your Gemini API key so the app can read care tags automatically.'}),el('button',{class:'btn sm',style:'margin-top:8px',onclick:()=>nav('settings')},'Add API key')));
+    m.append(b);
+  }
+  if(!state.garments.length){
+    const e=el('div',{class:'empty'});
+    e.innerHTML=svgShirt();
+    e.append(el('h2',{},'Your closet is empty'),el('div',{},'Add a garment: snap it plus its care tag, and I’ll decode how to wash & dry it on your Bosch machines.'));
+    m.append(e);
+  }else{
+    const grid=el('div',{class:'grid'});
+    state.garments.forEach(g=>{
+      const tile=el('button',{class:'tile',onclick:()=>openDetail(g.id)});
+      const cov=coverPhoto(g);
+      if(cov){tile.append(el('img',{class:'thumb',src:objURL(cov),alt:''}));}
+      else{const ph=el('div',{class:'thumb ph'});ph.innerHTML=svgShirt();tile.append(ph);}
+      const w=recommendWash(g.care,g.name);
+      tile.append(el('div',{class:'meta'},el('div',{class:'nm'},g.name||'Untitled'),el('div',{class:'sub'},w.program?('Wash: '+w.program):(g.care.do_not_wash?'Do not wash':'Tap for care'))));
+      grid.append(tile);
+    });
+    m.append(grid);
+  }
+  const fab=el('div',{class:'fab'});
+  if(state.garments.length){
+    const find=el('button',{class:'btn',onclick:()=>snapToFind()});
+    find.innerHTML=svgScan()+'<span>Snap it to find it</span>';
+    fab.append(find);
+    const add=el('button',{class:'btn sec',style:'margin-top:8px',onclick:()=>startAdd()});
+    add.innerHTML=svgPlus()+'<span>Add a garment</span>';
+    fab.append(add);
+    m.append(fab);m.append(el('div',{style:'height:150px'}));
+  }else{
+    const add=el('button',{class:'btn',onclick:()=>startAdd()});add.innerHTML=svgPlus()+'<span>Add a garment</span>';
+    fab.append(add);m.append(fab);m.append(el('div',{style:'height:80px'}));
+  }
+}
+
+/* ---------- SNAP IT TO FIND IT ---------- */
+function snapToFind(){
+  if(!getKey()){toast('Add your Gemini key first');nav('settings');return;}
+  const inp=el('input',{type:'file',accept:'image/*',capture:'environment',style:'display:none'});
+  document.body.append(inp);
+  inp.addEventListener('change',async e=>{
+    const f=e.target.files[0];inp.remove();if(!f)return;
+    const blob=await compress(f);
+    state.match={query:blob,busy:true,error:'',results:null};
+    nav('match');doMatch();
+  });
+  inp.click();
+}
+async function doMatch(){
+  const ms=state.match;
+  try{
+    const res=await geminiMatchGarment(ms.query,state.garments);
+    ms.results=res;ms.busy=false;render();
+  }catch(e){ms.busy=false;ms.error=e.message||String(e);render();}
+}
+function renderMatch(m){
+  const ms=state.match;if(!ms){nav('home');return;}
+  setHeader('Which one is it?','Matching against your closet');
+  const back=el('button',{class:'back',onclick:()=>nav('home')});back.innerHTML=svgBack()+'<span>Closet</span>';m.append(back);
+  if(ms.query)m.append(el('img',{class:'queryprev',src:objURL(ms.query),alt:'Photo you just took'}));
+
+  if(ms.busy){
+    const l=el('div',{class:'loading'});
+    l.append(el('div',{class:'spin'}),el('div',{},'Looking through your closet…'));
+    m.append(l);return;
+  }
+  if(ms.error){
+    m.append(note('bad',svgWarn(),ms.error));
+    const retry=el('button',{class:'btn',style:'margin-top:14px',onclick:()=>{ms.busy=true;ms.error='';render();doMatch();}},'Try again');
+    m.append(retry);
+    m.append(el('button',{class:'btn ghost',style:'margin-top:8px',onclick:()=>nav('home')},'Browse closet instead'));
+    return;
+  }
+  const r=ms.results||{candidates:[],no_match:true};
+  if(!r.candidates.length){
+    m.append(note('warn',svgWarn(),'I couldn’t match this to anything in your closet. If it’s new, add it — otherwise pick it from the list.'));
+    const add=el('button',{class:'btn',style:'margin-top:14px',onclick:()=>startAdd()});add.innerHTML=svgPlus()+'<span>Add it as a new garment</span>';
+    m.append(add);
+    m.append(el('button',{class:'btn ghost',style:'margin-top:8px',onclick:()=>nav('home')},'Browse closet'));
+    return;
+  }
+  const top=r.candidates[0];
+  m.append(el('div',{class:'section-title'},top.confidence==='high'?'This looks like':'Best guess'));
+  m.append(matchCard(top,true));
+  if(r.candidates.length>1){
+    m.append(el('div',{class:'section-title'},'Or did you mean'));
+    r.candidates.slice(1).forEach(c=>m.append(matchCard(c,false)));
+  }
+  if(top.confidence!=='high')m.append(note('tip',svgTip(),'Not sure? Tap an item to see its care guide, or browse the full closet.'));
+  if(r.truncated)m.append(note('tip',svgTip(),`Only your ${MAX_MATCH_ITEMS} most recent garments were searched.`));
+  m.append(el('button',{class:'btn ghost',style:'margin-top:10px',onclick:()=>nav('home')},'None of these — browse closet'));
+  m.append(el('div',{style:'height:40px'}));
+}
+function matchCard(c,best){
+  const g=c.garment;
+  const card=el('button',{class:'matchcard'+(best?' best':''),onclick:()=>openDetail(g.id)});
+  const cov=coverPhoto(g);
+  if(cov)card.append(el('img',{class:'mth',src:objURL(cov),alt:''}));
+  else{const ph=el('div',{class:'ph2'});ph.innerHTML=svgShirt();card.append(ph);}
+  const t=el('div',{class:'mtxt'});
+  t.append(el('div',{},el('span',{class:'conf '+c.confidence},c.confidence+' confidence')));
+  t.append(el('div',{class:'mnm',style:'margin-top:4px'},g.name||'Untitled'));
+  if(c.reason)t.append(el('div',{class:'mrs'},c.reason));
+  card.append(t);
+  const ch=el('div',{class:'chev'});ch.innerHTML=svgChev();card.append(ch);
+  return card;
+}
+
+/* ---------- ADD ---------- */
+function startAdd(){state.draft={id:'g'+Date.now(),name:'',care:null,garmentPhotos:[],tagPhotos:[],step:'photos',busy:false,error:''};nav('add');}
+function renderAdd(m){
+  const d=state.draft; setHeader(d.editing?'Edit garment':'Add garment',d.editing?(d.name||''):'Snap the item and its care tag');
+  const back=el('button',{class:'back',onclick:()=>d.editing?nav('detail'):nav('home')});
+  back.innerHTML=svgBack()+'<span>Cancel</span>';m.append(back);
+
+  m.append(photoStrip('Garment photos','garmentPhotos',svgShirt(),
+    'Front, back, and any distinctive detail. More angles make “Snap it to find it” more accurate.',MAX_GARMENT_PHOTOS));
+  m.append(photoStrip('Care tag — at least one','tagPhotos',svgCamera(),
+    'Add every label: fibre content and the symbols are often on separate tags. Fill the frame, keep it sharp and well-lit.',MAX_TAG_PHOTOS));
+
+  if(d.error)m.append(note('bad',svgWarn(),d.error));
+
+  if(d.step==='photos'){
+    const fab=el('div',{class:'fab'});
+    if(d.busy){const b=el('button',{class:'btn',disabled:'true'});b.innerHTML='<span class="spin"></span><span>Reading the tag…</span>';fab.append(b);}
+    else{
+      const hasTag=(d.tagPhotos||[]).length>0, hasKey=!!getKey(), canAI=hasTag&&hasKey;
+      const read=el('button',{class:'btn',disabled:canAI?false:true,onclick:()=>doRead()});read.innerHTML=svgSpark()+'<span>Read tag with AI</span>';
+      fab.append(read);
+      if(state.garments.length){
+        const same=el('button',{class:'btn sec',style:'margin-top:8px',onclick:()=>openPick('copyFrom',null)});
+        same.innerHTML=svgCopy()+'<span>Same tag as something I own</span>';
+        fab.append(same);
+      }
+      const man=el('button',{class:'btn ghost',style:'margin-top:8px',onclick:()=>{d.care=blankCare();d.step='review';render();}},'Enter details manually');
+      fab.append(man);
+      // A disabled button must always say why it is disabled.
+      if(!canAI){
+        let why;
+        if(!hasTag&&!hasKey)why='Add a photo of the care tag, and your Gemini key in Settings, to auto-read.';
+        else if(!hasTag)why='Add a photo of the care tag to auto-read it.';
+        else why='Add your Gemini key in Settings to auto-read — or enter the details manually.';
+        const cap=el('div',{class:'cap',style:'margin-top:8px'},why);
+        if(!hasKey){
+          const link=el('button',{class:'btn ghost sm',style:'margin:8px auto 0;display:block',onclick:()=>nav('settings')},'Open Settings');
+          fab.append(cap,link);
+        } else fab.append(cap);
+      }
+    }
+    m.append(fab);m.append(el('div',{style:'height:150px'}));
+  }else{
+    renderReview(m);
+  }
+}
+const MAX_GARMENT_PHOTOS=5, MAX_TAG_PHOTOS=4;
+/* A strip of photos with add + remove. No `capture` attribute, so Android offers
+   Camera *and* the gallery, and the gallery allows picking several at once. */
+function photoStrip(label,field,icon,hint,max){
+  const d=state.draft, list=d[field]||(d[field]=[]);
+  const wrap=el('div',{style:'margin-bottom:14px'});
+  const head=el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px'});
+  head.append(el('label',{style:'font-size:13px;font-weight:650;color:var(--muted)'},label));
+  head.append(el('span',{class:'muted',style:'font-size:12px'},`${list.length}/${max}`));
+  wrap.append(head);
+
+  const strip=el('div',{class:'pstrip'});
+  list.forEach((blob,i)=>{
+    const cell=el('div',{class:'pcell'});
+    cell.append(el('img',{src:objURL(blob),alt:''}));
+    if(i===0)cell.append(el('div',{class:'pmain'},'Main'));
+    const rm=el('button',{class:'prm','aria-label':'Remove photo',onclick:ev=>{ev.preventDefault();ev.stopPropagation();list.splice(i,1);render();}});
+    rm.innerHTML='&times;';
+    cell.append(rm);
+    strip.append(cell);
+  });
+  if(list.length<max){
+    const add=el('label',{class:'pcell padd'});
+    const input=el('input',{type:'file',accept:'image/*',multiple:true,style:'display:none'});
+    input.addEventListener('change',async e=>{
+      const files=[...e.target.files].slice(0,max-list.length);
+      for(const f of files){ list.push(await compress(f)); }
+      render();
+    });
+    const ph=el('div',{class:'ph'});ph.innerHTML=icon+'<span>Add</span>';
+    add.append(ph,input);
+    strip.append(add);
+  }
+  wrap.append(strip);
+  if(hint)wrap.append(el('div',{class:'cap',style:'text-align:left;margin-top:6px'},hint));
+  return wrap;
+}
+async function doRead(){
+  const d=state.draft;d.busy=true;d.error='';render();
+  try{
+    const care=await geminiReadTag(d.tagPhotos,d.garmentPhotos);
+    d.care=care;if(!d.name&&care.garment_guess)d.name=care.garment_guess;
+    d.step='review';d.busy=false;render();toast('Tag decoded');
+  }catch(e){d.busy=false;d.error=e.message||String(e);render();}
+}
+function renderReview(m){
+  const d=state.draft,c=d.care;
+  m.append(el('div',{class:'section-title'},'Name'));
+  const nameIn=el('input',{class:'input',type:'text',placeholder:'e.g. Navy merino sweater',value:d.name||''});
+  nameIn.addEventListener('input',e=>d.name=e.target.value);
+  m.append(nameIn);
+
+  const unsureList=(c.low_confidence||[]).filter(f=>FIELD_LABEL[f]);
+  if(unsureList.length){
+    m.append(note('warn',svgWarn(),`The AI wasn’t sure about ${unsureList.length===1?'one field':unsureList.length+' fields'}: `+
+      unsureList.map(f=>FIELD_LABEL[f]).join(', ')+'. They’re marked below — check them against the tag before saving.'));
+  }
+  m.append(el('div',{class:'section-title'},'Decoded care — edit anything the AI got wrong'));
+  const card=el('div',{class:'card',style:'padding:14px 16px'});
+  card.append(selField('Fabric (free text)','fabric','text'));
+  card.append(selField('Washing','_wash','select',[['machine','Machine washable'],['hand','Hand wash only'],['none','Do not wash']]));
+  card.append(selField('Max wash temperature','wash_temp_c','select',[['','No limit shown'],['30','30°C (cold)'],['40','40°C (warm)'],['50','50°C (hot)'],['60','60°C (extra hot)'],['90','90°C']]));
+  card.append(selField('Wash action','wash_action','select',[['normal','Normal'],['permanent_press','Permanent press (1 bar)'],['gentle','Gentle / delicate (2 bars)']]));
+  card.append(selField('Bleach','bleach','select',[['','Not specified'],['any','Any bleach OK'],['non_chlorine','Non-chlorine only'],['none','Do not bleach']]));
+  card.append(selField('Drying','_dry','select',[['tumble','Tumble dry OK'],['none','Do not tumble dry'],['air','Air dry only']]));
+  card.append(selField('Tumble heat','tumble_heat','select',[['no_heat','No heat / air'],['low','Low heat'],['medium','Medium heat'],['high','High heat']]));
+  card.append(selField('If air-drying, method','natural_dry','select',[['','—'],['line','Hang / line dry'],['flat','Lay flat'],['drip','Drip dry'],['line_shade','Hang in shade'],['flat_shade','Flat in shade']]));
+  card.append(selField('Ironing','iron','select',[['','Not specified'],['none','Do not iron'],['low','Low'],['medium','Medium'],['high','High']]));
+  card.append(selField('Dry clean','dry_clean','select',[['','Not specified'],['any','Dry-clean safe'],['do_not','Do not dry clean'],['petroleum','Petroleum solvent'],['pce','PCE solvent'],['gentle','Gentle']]));
+  card.append(selField('Notes (wool, denim, “wash inside out”, …)','special_notes','textarea'));
+  m.append(card);
+
+  const fab=el('div',{class:'fab'});
+  const save=el('button',{class:'btn',onclick:()=>saveDraft()});save.innerHTML=svgCheck()+'<span>Save to closet</span>';
+  fab.append(save);m.append(fab);m.append(el('div',{style:'height:150px'}));
+}
+function selField(label,field,type,opts){
+  const d=state.draft,c=d.care;
+  const unsure=isUnsure(c,field);
+  const wrap=el('div',{class:'field'+(unsure?' unsure':'')});
+  const lab=el('label',{},label);
+  if(unsure)lab.append(el('span',{class:'flag'},'check this'));
+  wrap.append(lab);
+  let cur;
+  if(field==='_wash')cur=c.do_not_wash?'none':(c.hand_wash&&!c.machine_wash?'hand':'machine');
+  else if(field==='_dry')cur=c.do_not_tumble_dry?'none':(c.tumble_dry?'tumble':(c.natural_dry?'air':'tumble'));
+  else if(field==='wash_temp_c')cur=c.wash_temp_c==null?'':String(c.wash_temp_c);
+  else cur=c[field]==null?'':c[field];
+  if(type==='text'){const i=el('input',{class:'input',type:'text',value:cur||''});i.addEventListener('input',e=>{c[field]=e.target.value;clearUnsure(c,field);});wrap.append(i);}
+  else if(type==='textarea'){const i=el('textarea',{class:'input'});i.value=cur||'';i.addEventListener('input',e=>{c[field]=e.target.value;clearUnsure(c,field);});wrap.append(i);}
+  else{
+    const sel=el('select',{class:'input'});
+    opts.forEach(([v,t])=>{const o=el('option',{value:v},t);if(v===cur)o.selected=true;sel.append(o);});
+    sel.addEventListener('change',e=>{applyField(field,e.target.value);clearUnsure(c,field);render();});
+    wrap.append(sel);
+  }
+  if(unsure)wrap.append(el('div',{class:'cap',style:'text-align:left;margin-top:5px;color:var(--warn)'},
+    'The AI inferred this rather than reading it clearly. Confirm it against the tag.'));
+  return wrap;
+}
+function applyField(field,v){
+  const c=state.draft.care;
+  if(field==='_wash'){c.do_not_wash=v==='none';c.hand_wash=v==='hand';c.machine_wash=v==='machine';}
+  else if(field==='_dry'){c.do_not_tumble_dry=v==='none';c.tumble_dry=v==='tumble';if(v==='air'&&!c.natural_dry)c.natural_dry='flat';}
+  else if(field==='wash_temp_c'){c.wash_temp_c=v===''?null:parseInt(v,10);}
+  else{c[field]=v===''?null:v;}
+}
+async function saveDraft(){
+  const d=state.draft;
+  const rec={id:d.id,name:(d.name||'Untitled garment').trim(),care:d.care,
+    garmentPhotos:d.garmentPhotos||[],tagPhotos:d.tagPhotos||[],
+    createdAt:d.editing&&d.createdAt?d.createdAt:Date.now()};   // editing keeps its place in the closet
+  try{await dbPut(rec);state.garments=await dbAll();toast(d.editing?'Updated':'Saved');
+    state._detail=rec;nav('detail',{current:rec.id});}
+  catch(e){toast('Save failed');console.error(e);}
+}
+
+/* ---------- DETAIL ---------- */
+async function openDetail(id){const g=await dbGet(id);state.current=id;state._detail=g;nav('detail');}
+function renderDetail(m){
+  const g=state._detail;if(!g){nav('home');return;}
+  setHeader('Care guide',g.name);
+  const back=el('button',{class:'back',onclick:()=>nav('home')});back.innerHTML=svgBack()+'<span>Closet</span>';m.append(back);
+
+  const gp=g.garmentPhotos||[], tp=g.tagPhotos||[], photos=[...gp,...tp];
+  if(photos.length){
+    const hero=el('img',{class:'detailhero',src:objURL(photos[0]),alt:''});m.append(hero);
+    if(photos.length>1){
+      const strip=el('div',{class:'thumbstrip'});
+      photos.forEach((p,i)=>{
+        const t=el('img',{src:objURL(p),class:i===0?'active':'',alt:i<gp.length?'Garment photo':'Care tag photo'});
+        t.addEventListener('click',()=>{hero.src=objURL(p);[...strip.children].forEach(c=>c.classList.remove('active'));t.classList.add('active');});
+        strip.append(t);
+      });
+      m.append(strip);
+      const bits=[]; if(gp.length)bits.push(`${gp.length} garment`); if(tp.length)bits.push(`${tp.length} care tag`);
+      m.append(el('div',{class:'cap'},bits.join(' · ')));
+    }
+  }
+  m.append(el('h1',{class:'gname'},g.name||'Untitled'));
+  if(g.care.fabric)m.append(el('div',{class:'gsub'},g.care.fabric));
+  const uns=(g.care.low_confidence||[]).filter(f=>FIELD_LABEL[f]);
+  if(uns.length)m.append(note('warn',svgWarn(),
+    'Unconfirmed: '+uns.map(f=>FIELD_LABEL[f]).join(', ')+'. The AI inferred '+(uns.length===1?'this':'these')+' rather than reading '+(uns.length===1?'it':'them')+' clearly — tap Edit to check against the tag.'));
+
+  const w=recommendWash(g.care,g.name);
+  m.append(el('div',{class:'section-title'},'How to wash it'));
+  m.append(washCard(w));
+
+  const dr=recommendDry(g.care,g.name);
+  m.append(el('div',{class:'section-title'},'How to dry it'));
+  m.append(dryCard(dr));
+
+  m.append(el('div',{class:'section-title'},'What the tag says'));
+  const sum=el('div',{class:'card summary'});
+  careSummary(g.care).forEach(([icon,lab,val])=>{
+    const r=el('div',{class:'srow'});const si=el('div',{class:'si'});si.innerHTML=icon;
+    r.append(si,el('div',{class:'st'},el('div',{class:'lab'},lab),el('div',{class:'val'},val)));
+    sum.append(r);
+  });
+  m.append(sum);
+
+  m.append(el('div',{style:'height:16px'}));
+  const edit=el('button',{class:'btn sec',onclick:()=>startEdit(g)});edit.innerHTML=svgPencil()+'<span>Edit this garment</span>';
+  m.append(edit);
+  if(state.garments.length>1){
+    const cp=el('button',{class:'btn ghost',style:'margin-top:8px',onclick:()=>openPick('applyTo',g)});
+    cp.innerHTML=svgCopy()+'<span>Apply this care to other garments</span>';
+    m.append(cp);
+  }
+  const del=el('button',{class:'btn danger',style:'margin-top:8px',onclick:()=>removeGarment(g.id)});del.innerHTML=svgTrash()+'<span>Remove from closet</span>';
+  m.append(del);
+  m.append(el('div',{style:'height:40px'}));
+}
+
+/* ---------- EDIT ---------- */
+function startEdit(g){
+  state.draft={id:g.id,name:g.name||'',care:JSON.parse(JSON.stringify(g.care||blankCare())),
+    garmentPhotos:[...(g.garmentPhotos||[])],tagPhotos:[...(g.tagPhotos||[])],
+    step:'review',busy:false,error:'',editing:true,createdAt:g.createdAt};
+  nav('add');
+}
+
+/* ---------- COPY CARE BETWEEN GARMENTS ---------- */
+function openPick(mode,source){ state.pick={mode,source:source||null,sel:[]}; nav('pick'); }
+function renderPick(m){
+  const p=state.pick; if(!p){nav('home');return;}
+  const applying=p.mode==='applyTo';
+  setHeader(applying?'Apply care to…':'Copy care from…',applying?'Identical tags, one profile':'Pick a garment with the same tag');
+  const back=el('button',{class:'back',onclick:()=>applying?nav('detail'):nav('add')});
+  back.innerHTML=svgBack()+'<span>Back</span>';m.append(back);
+  m.append(note('tip',svgTip(),applying
+    ? 'Choose garments with the SAME care label. Their care details will be overwritten with this one’s — photos and names are untouched.'
+    : 'Choose a garment with the same care label and its care details will be copied over, skipping the AI read entirely.'));
+
+  const pool=state.garments.filter(g=>!p.source||g.id!==p.source.id);
+  if(!pool.length){m.append(note('warn',svgWarn(),'No other garments saved yet.'));return;}
+  pool.forEach(g=>{
+    const on=p.sel.indexOf(g.id)>=0;
+    const row=el('button',{class:'matchcard'+(on?' best':''),onclick:()=>{
+      if(applying){ const i=p.sel.indexOf(g.id); if(i>=0)p.sel.splice(i,1); else p.sel.push(g.id); render(); }
+      else { copyCareFrom(g); }
+    }});
+    const cov=coverPhoto(g);
+    if(cov)row.append(el('img',{class:'mth',src:objURL(cov),alt:''}));
+    else{const ph=el('div',{class:'ph2'});ph.innerHTML=svgShirt();row.append(ph);}
+    const t=el('div',{class:'mtxt'});
+    t.append(el('div',{class:'mnm'},g.name||'Untitled'));
+    const w=recommendWash(g.care,g.name);
+    t.append(el('div',{class:'mrs'},(g.care&&g.care.fabric?g.care.fabric+' · ':'')+(w.program?'Wash: '+w.program:'')));
+    row.append(t);
+    const ch=el('div',{class:'chev'});ch.innerHTML=applying?(on?svgCheck():svgPlus()):svgChev();row.append(ch);
+    m.append(row);
+  });
+  if(applying){
+    const fab=el('div',{class:'fab'});
+    const go=el('button',{class:'btn',disabled:p.sel.length?false:true,onclick:()=>applyCareTo()});
+    go.innerHTML=svgCheck()+`<span>Apply to ${p.sel.length||'…'} garment${p.sel.length===1?'':'s'}</span>`;
+    fab.append(go);
+    fab.append(el('button',{class:'btn ghost',style:'margin-top:8px',onclick:()=>nav('detail')},'Cancel'));
+    m.append(fab);m.append(el('div',{style:'height:150px'}));
+  }
+}
+function copyCareFrom(g){
+  const d=state.draft; if(!d){nav('home');return;}
+  d.care=JSON.parse(JSON.stringify(g.care||blankCare()));
+  d.care.low_confidence=[];                       // copied from a profile you already vetted
+  d.care.garment_guess='';
+  if(!d.name)d.name='';
+  d.step='review'; state.pick=null; toast('Care copied from '+(g.name||'that garment')); nav('add');
+}
+async function applyCareTo(){
+  const p=state.pick; if(!p||!p.source)return;
+  const care=JSON.parse(JSON.stringify(p.source.care||blankCare()));
+  care.garment_guess='';
+  let n=0;
+  for(const id of p.sel){
+    const g=await dbGet(id); if(!g)continue;
+    g.care=JSON.parse(JSON.stringify(care));
+    delete g.garmentPhoto; delete g.tagPhoto;     // drop legacy fields on rewrite
+    await dbPut(g); n++;
+  }
+  state.garments=await dbAll(); state.pick=null;
+  toast(`Care applied to ${n} garment${n===1?'':'s'}`);
+  state._detail=await dbGet(p.source.id); nav('detail');
+}
+function washCard(w){
+  const card=el('div',{class:'rec wash'});
+  const head=el('div',{class:'rec-head'});const ic=el('div',{class:'ic'});ic.innerHTML=svgWash();
+  head.append(ic,el('div',{},el('h3',{},'Washer'),el('div',{class:'mdl'},WASHER.model)));
+  card.append(head);
+  if(!w.program){
+    w.warnings.forEach(t=>card.append(note('bad',svgWarn(),t)));
+    w.notes.forEach(t=>card.append(note('tip',svgTip(),t)));
+    return card;
+  }
+  card.append(setRow('Program',w.program,w.programReason,true));
+  card.append(setRow('Temperature',w.temp,w.tempReason));
+  card.append(setRow('Spin',w.spin));
+  const wl=loadInfo(WASHER,w.program);
+  if(wl)card.append(setRow('Max load',wl.text,fitText(WASHER,wl.frac,w.kind)));
+  if(w.options.length){const r=el('div',{class:'setrow'});r.append(el('div',{class:'k'},'Options'));const v=el('div',{class:'v',style:'font-weight:400'});w.options.forEach(o=>v.append(el('span',{class:'pill'},o)));r.append(v);card.append(r);}
+  if(wl&&wl.tight)card.append(note('tip',svgTip(),`${wl.text} maximum — don’t pack it. A gentle cycle only works if the load can move freely; overfilling defeats the point.`));
+  if(wl)card.append(fitTable(WASHER,wl));
+  w.warnings.forEach(t=>card.append(note('warn',svgWarn(),t)));
+  (w.extras||[]).forEach(x=>card.append(note('tip',x.icon==='bag'?svgBag():svgDrop(),x.text)));
+  w.notes.forEach(t=>card.append(note('tip',svgTip(),t)));
+  return card;
+}
+function dryCard(dr){
+  const card=el('div',{class:'rec dry'});
+  const head=el('div',{class:'rec-head'});const ic=el('div',{class:'ic'});ic.innerHTML=svgDry();
+  head.append(ic,el('div',{},el('h3',{},'Dryer'),el('div',{class:'mdl'},DRYER.model)));
+  card.append(head);
+  if(dr.mode==='air'){
+    dr.warnings.forEach(t=>card.append(note('warn',svgWarn(),t)));
+    const r=el('div',{class:'setrow'});r.append(el('div',{class:'k'},'Method'),el('div',{class:'v'},el('span',{class:'big'},'Air dry')));card.append(r);
+    if(dr.naturalText)card.append(note('tip',svgWind(),dr.naturalText));
+    dr.notes.forEach(t=>card.append(note('tip',svgTip(),t)));
+    return card;
+  }
+  card.append(setRow('Program',dr.program,null,true));
+  card.append(setRow('Heat',dr.heatLabel));
+  const dl=loadInfo(DRYER,dr.program);
+  if(dl)card.append(setRow('Max load',dl.text,fitText(DRYER,dl.frac,dr.kind)));
+  if(dr.options.length){const r=el('div',{class:'setrow'});r.append(el('div',{class:'k'},'Options'));const v=el('div',{class:'v',style:'font-weight:400'});dr.options.forEach(o=>v.append(el('span',{class:'pill'},o)));r.append(v);card.append(r);}
+  if(dl&&dl.tight)card.append(note('tip',svgTip(),`${dl.text} maximum — clothes need room to tumble or they come out damp and creased.`));
+  if(dl)card.append(fitTable(DRYER,dl));
+  dr.warnings.forEach(t=>card.append(note('warn',svgWarn(),t)));
+  dr.notes.forEach(t=>card.append(note('tip',svgTip(),t)));
+  return card;
+}
+/* "≈ 6 of these" under the Max load row, for the garment you're looking at. */
+function fitText(machine,frac,kind){
+  const n=fitCount(machine,frac,kind); if(n==null)return null;
+  if(frac==='1 item')return 'one at a time';
+  const k=GARMENT_KINDS[kind]||GARMENT_KINDS.other;
+  return n===1?'about 1 of these':`about ${n} of these`;
+}
+/* A short reference for everything else, so you can judge a mixed load. */
+const FIT_REFERENCE=['tshirt','shirt','jumper','jeans','towel'];
+function fitTable(machine,li){
+  if(li.frac==='1 item')return el('span');
+  const det=el('details',{class:'help',style:'margin-top:10px'});
+  const sum=el('summary',{},`What else fits in ${li.text.toLowerCase()}?`);
+  det.append(sum);
+  const ul=el('ul');
+  FIT_REFERENCE.forEach(kd=>{
+    const n=fitCount(machine,li.frac,kd);
+    ul.append(el('li',{},`about ${n} ${GARMENT_KINDS[kd].label}`));
+  });
+  ul.append(el('li',{style:'margin-top:6px;opacity:.85'},
+    'Rough guide only. Go by eye: loosely placed, the load should fill about '+
+    (li.frac==='Full'?'the drum':li.text.replace(' drum',' of the drum'))+'.'));
+  det.append(ul);
+  return det;
+}
+function setRow(k,v,reason,big){
+  const r=el('div',{class:'setrow'});
+  r.append(el('div',{class:'k'},k));
+  const vv=el('div',{class:'v'});
+  vv.append(el('span',{class:big?'big':''},v));
+  if(reason)vv.append(el('div',{class:'muted',style:'font-size:12px;font-weight:400;margin-top:2px'},reason));
+  r.append(vv);return r;
+}
+function note(kind,icon,text){const n=el('div',{class:'note '+kind});const s=el('span');s.innerHTML=icon;n.append(s,el('span',{},text));return n;}
+async function removeGarment(id){
+  if(!confirm('Remove this garment from your closet?'))return;
+  await dbDel(id);state.garments=await dbAll();toast('Removed');nav('home');
+}
+
+/* =========================================================================
+   Laundry tips reference
+   ========================================================================= */
+const TIPS=[
+ {title:'Boosters & additives',items:[
+  ['Oxygen bleach — the colour-safe one','Sodium percarbonate (the OxiClean type). This is what a tag means by “non-chlorine bleach”: the triangle with two diagonal lines. It lifts stains and brightens without stripping colour, but it needs warmth — around 40 °C and up. In a cold wash it does almost nothing, so pre-soak in warm water instead of dumping it in the drum.'],
+  ['Colour-catcher sheets','Toss one in loose with the load. They absorb dye that bleeds into the water before it can settle on your other clothes. Best for new items, dark denim, and anything red for its first few washes. They reduce risk, they don’t remove it — don’t gamble a white shirt on one.'],
+  ['White vinegar','About half a cup in the fabric-softener compartment. Helps strip detergent residue, softens hard water, and cuts the musty smell out of towels. Use it occasionally, not every wash: it is an acid, and several appliance makers caution about long-term effects on seals and hoses.'],
+  ['Baking soda (bicarbonate)','A mild deodoriser — about half a cup straight into the drum. Helpful on smelly gym kit, but it is gentle stuff and will not replace detergent or shift real stains.'],
+  ['Washing soda (sodium carbonate)','A much stronger alkali than baking soda, and a genuine cleaning booster in hard water. Never use it on wool or silk: alkali attacks protein fibres and will wreck them permanently.'],
+  ['The vinegar + baking soda myth','Mixed together they neutralise each other — you get fizz, then salty water, and lose the benefit of both. Use one or the other in a given wash, never both.']
+ ]},
+ {title:'Detergent',items:[
+  ['Use HE detergent','Your Bosch is a high-efficiency front-loader. Regular detergent produces too much foam, and that foam cushions the load so clothes rub against suds instead of water — it cleans worse, not better.'],
+  ['You are probably using too much','This is the single most common laundry mistake. Excess detergent never rinses out: it leaves residue that stiffens fabric, traps odour, irritates skin and feeds mould inside the machine. Dose for the load size and your water hardness, and treat the cap’s line as a maximum.'],
+  ['Powder vs liquid','Powder generally does better on whites and in hard water. Liquid handles grease better and dissolves properly in cold washes.'],
+  ['Skip fabric softener on','Towels (it coats the fibres and destroys absorbency), activewear and microfibre (it clogs the wicking that makes them work), and children’s flame-resistant sleepwear (it can reduce the flame resistance).']
+ ]},
+ {title:'Looking after the machines',items:[
+  ['Run Drum Clean monthly','Your washer has the program. Run it empty on Extra Hot. It clears the biofilm that builds up from cold washes and detergent residue — the usual cause of a machine that smells.'],
+  ['Leave the door and drawer ajar','The commonest front-loader complaint is a mouldy smell, and this prevents it. Water sits in the rubber gasket after every wash; a closed door keeps it damp and dark.'],
+  ['Wipe the door gasket','Pull back the fold of the rubber seal and dry it. Hair, grit and a surprising amount of water collect in there.'],
+  ['Clean the detergent drawer','Every month or two. Residue builds into a sludge that stops the dispenser flushing properly.'],
+  ['Check the drain pump filter','A few times a year. Coins, pins and lint collect there, and a blocked filter shows up as a cycle that will not drain or spin.'],
+  ['Dryer: lint filter every single load','And because yours is a ventless condenser, it also has a secondary filter and condenser unit that need rinsing periodically. A condenser dryer that has started taking forever is almost always telling you this.'],
+  ['Don’t leave wet laundry in the drum','A few hours is all it takes to go sour, and then it needs rewashing.']
+ ]},
+ {title:'Before you load',items:[
+  ['Close everything that can catch','Zip zips, fasten hooks and Velcro, undo buttons. Open zips act like little saws on knitwear.'],
+  ['Turn dark and printed items inside out','Protects prints from abrasion and keeps dark fabric from picking up the grey sheen of surface wear.'],
+  ['Empty the pockets','A tissue means re-washing everything. A pen means replacing it.'],
+  ['Sort by weight and soil, not just colour','Towels and jeans in with t-shirts will abrade the lighter items regardless of whether the colours match.'],
+  ['Never tumble dry a stain you have not removed','Heat sets most stains permanently. Check the garment while it is wet, and re-treat before it goes anywhere near the dryer.']
+ ]},
+ {title:'Stain first aid',items:[
+  ['Blot, never rub','Rubbing drives the stain deeper into the weave and can fuzz the fabric surface.'],
+  ['Blood, egg, dairy, sweat — cold water only','These are protein stains. Hot water cooks the protein into the fibre and the mark becomes permanent.'],
+  ['Grease and oil — dish soap','Work a drop into the mark, leave it a few minutes, then wash at the warmest temperature the tag allows.'],
+  ['Wine, coffee, tea — rinse cold first','These are tannin stains. Flush with cold water before anything else; starting with soap can set them.'],
+  ['Test somewhere hidden','Inside a seam or hem, before you put any treatment on a visible area.']
+ ]},
+ {title:'Safety',items:[
+  ['Never mix chlorine bleach with vinegar or any acid','It releases chlorine gas, which is genuinely dangerous in an enclosed room like a utility space or bathroom.'],
+  ['Never mix chlorine bleach with ammonia','Or with cleaners containing it. This produces toxic chloramine vapour.'],
+  ['Respect the bleach symbol','A triangle with two diagonal lines means non-chlorine only. Chlorine on those fabrics will strip the colour or weaken the fibre, and the damage cannot be undone.'],
+  ['Keep detergent pods away from children','They look exactly like sweets, and the concentrated contents cause serious harm if bitten.']
+ ]}
+];
+function renderTips(m){
+  setHeader('Laundry tips','Additives, machine care, stains');
+  const back=el('button',{class:'back',onclick:()=>nav('home')});back.innerHTML=svgBack()+'<span>Closet</span>';m.append(back);
+  m.append(note('tip',svgTip(),'General guidance. Where it disagrees with a garment’s own care label, the label wins.'));
+  TIPS.forEach(sec=>{
+    m.append(el('div',{class:'section-title'},sec.title));
+    const card=el('div',{class:'card',style:'padding:4px 16px 8px'});
+    sec.items.forEach(([h,b],i)=>{
+      const row=el('div',{class:'srow',style:'align-items:flex-start'});
+      const st=el('div',{class:'st'});
+      st.append(el('div',{style:'font-weight:700;letter-spacing:-.01em;margin-bottom:3px'},h));
+      st.append(el('div',{class:'muted',style:'font-size:14px;line-height:1.5'},b));
+      row.append(st);card.append(row);
+    });
+    m.append(card);
+  });
+  m.append(el('div',{style:'height:40px'}));
+}
+
+/* ---------- SETTINGS: key / model check ---------- */
+async function doCheckKey(keyValue,modelIn){
+  if(keyValue&&keyValue!==getKey())setKey(keyValue);   // test what's typed, not a stale key
+  state.modelCheck={busy:true};render();
+  try{
+    const models=await listModels();
+    state.modelCheck={busy:false,models};
+    if(models.length&&!models.some(x=>x.id===getModel())){
+      const best=models[0].id; setModel(best);
+      state.modelCheck.autoPicked=best;
+    }
+  }catch(e){ state.modelCheck={busy:false,error:e.message||String(e)}; }
+  render();
+}
+function renderModelCheck(out,modelIn){
+  const mc=state.modelCheck; if(!mc)return;
+  out.innerHTML='';
+  if(mc.busy){const l=el('div',{class:'loading'});l.append(el('div',{class:'spin'}),el('div',{},'Asking Google what your key can use…'));out.append(l);return;}
+  if(mc.error){out.append(note('bad',svgWarn(),mc.error));return;}
+  const models=mc.models||[];
+  if(!models.length){out.append(note('warn',svgWarn(),'Your key works, but offers no models that can generate content. Check the key’s API restrictions in Google AI Studio.'));return;}
+  out.append(note('tip',svgCheck(),`Key works — ${models.length} usable model${models.length>1?'s':''}. Best first; tap one to use it.`));
+  if(mc.autoPicked)out.append(note('tip',svgSpark(),`Your saved model wasn’t available, so I switched you to ${mc.autoPicked}.`));
+  const cur=getModel();
+  models.slice(0,12).forEach(mm=>{
+    const row=el('button',{class:'matchcard'+(mm.id===cur?' best':''),style:'margin-top:8px',
+      onclick:()=>{setModel(mm.id);modelIn.value=mm.id;toast('Model set to '+mm.id);render();}});
+    const t=el('div',{class:'mtxt'});
+    t.append(el('div',{class:'mnm'},mm.id));
+    if(mm.label||mm.id===cur)t.append(el('div',{class:'mrs'},(mm.id===cur?'In use · ':'')+(mm.label||'')));
+    row.append(t);
+    const ch=el('div',{class:'chev'});ch.innerHTML=svgChev();row.append(ch);
+    out.append(row);
+  });
+}
+
+/* ---------- SETTINGS ---------- */
+function renderSettings(m){
+  setHeader('Settings','');
+  const back=el('button',{class:'back',onclick:()=>nav('home')});back.innerHTML=svgBack()+'<span>Closet</span>';m.append(back);
+
+  m.append(el('div',{class:'section-title'},'Gemini API key'));
+  const card=el('div',{class:'card',style:'padding:16px'});
+  const keyIn=el('input',{class:'input',type:'password',placeholder:'Paste your Gemini API key',value:getKey()});
+  card.append(el('div',{class:'field'},el('label',{},'API key (stored only on this device)'),keyIn));
+  const modelIn=el('input',{class:'input',type:'text',value:getModel(),placeholder:DEFAULT_MODEL});
+  card.append(el('div',{class:'field'},el('label',{},'Model'),modelIn));
+
+  // Ask the key which models it can actually run, instead of guessing names.
+  const checkBtn=el('button',{class:'btn sec',onclick:()=>doCheckKey(keyIn.value,modelIn)},'Check key & list models');
+  card.append(checkBtn);
+  const out=el('div',{id:'modelOut'});
+  card.append(out);
+  if(state.modelCheck)renderModelCheck(out,modelIn);
+
+  const save=el('button',{class:'btn',style:'margin-top:10px',onclick:()=>{setKey(keyIn.value);setModel(modelIn.value);toast('Saved');nav('home');}},'Save');
+  card.append(save);
+  const det=el('details',{class:'help'});
+  det.innerHTML='<summary>Where do I get a key?</summary><ul><li>Go to Google AI Studio (aistudio.google.com) → “Get API key”.</li><li>Create a key and paste it above. It lives only in this browser and is sent only to Google.</li><li>Don’t guess model names — tap <b>Check key & list models</b> and pick from what your key actually offers.</li></ul>';
+  card.append(det);
+  m.append(card);
+
+  m.append(el('div',{class:'section-title'},'Your machines'));
+  [WASHER,DRYER].forEach(mc=>{
+    const box=el('div',{class:'card machinebox',style:'margin-bottom:12px'});
+    box.append(el('div',{style:'font-weight:700;letter-spacing:-.01em'},mc.name));
+    box.append(el('div',{class:'muted',style:'font-size:13px;margin:2px 0 8px'},mc.model));
+    box.append(el('div',{class:'mrow'},el('span',{class:'mk'},'Programs'),el('span',{},String(mc.programs.length))));
+    const det=el('details',{class:'help'});
+    det.innerHTML='<summary>See all programs</summary><ul>'+mc.programs.map(p=>'<li>'+esc(p)+'</li>').join('')+'</ul>';
+    box.append(det);
+    m.append(box);
+  });
+  m.append(el('div',{class:'cap',style:'margin-top:6px'},'Recommendations are tuned to these two machines. Ask to change them if you swap appliances.'));
+
+  m.append(el('div',{class:'section-title'},'Data'));
+  const dcard=el('div',{class:'card',style:'padding:16px'});
+  dcard.append(el('div',{class:'muted',style:'font-size:14px;margin-bottom:10px'},'Your garments and photos are stored only on this device (in the browser). Nothing is uploaded except the photos you send to Gemini.'));
+  m.append(dcard);
+  m.append(el('div',{style:'height:40px'}));
+}
+
+boot();
+</script>
+</body>
+</html>
