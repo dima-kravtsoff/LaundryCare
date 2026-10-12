@@ -61,7 +61,7 @@ app/src/main/java/com/laundrycare/
   ai/        Provider-neutral schema + prompts, Gemini and Claude clients
   ui/        Compose screens and the single ViewModel
 app/src/test/  JVM unit tests for the pure logic
-laundry-care.html   The earlier single-file web app this was built from
+laundry-care.html   The earlier single-file web app this was built from (live at https://dima-kravtsoff.github.io/LaundryCare/)
 ```
 
 Photos are stored upright at 1600 px on the long side; a 384 px thumbnail is kept for the matcher. Drafts survive the camera app pushing the process out of memory.
