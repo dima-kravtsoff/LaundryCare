@@ -265,6 +265,8 @@ class ClosetViewModel(app: Application) : AndroidViewModel(app) {
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
+                            // A refused key would fail the read too: say so now, not one call later.
+                            if ((e as? AiException)?.badKey == true) throw e
                             Log.w(TAG, "tag $i: locate failed: ${e.message}")
                             null
                         }

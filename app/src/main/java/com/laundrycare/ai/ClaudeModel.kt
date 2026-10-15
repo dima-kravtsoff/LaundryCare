@@ -164,7 +164,7 @@ class ClaudeModel(
             400 -> "Claude rejected the request: $message"
             else -> "Claude error $code: $message"
         }
-        return AiException(text, code = code, retryable = code == 429 || code >= 500, nextModel = code == 404)
+        return AiException(text, code = code, retryable = code == 429 || code >= 500, nextModel = code == 404, badKey = code == 401 || code == 403)
     }
 
     companion object {

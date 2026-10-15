@@ -214,6 +214,8 @@ class GeminiModel(
         val error = root?.get("error").obj()
         val message = error?.get("message").str()?.takeIf { it.isNotBlank() } ?: "HTTP $code"
         val details = error?.get("details").arr().orEmpty().mapNotNull { it.obj() }
+        val reason = details.firstNotNullOfOrNull { it["reason"].str() }
+        val keyInvalid = code == 400 && message.contains("API key not valid", ignoreCase = true)
         val quotaIds = details.flatMap { d -> d["violations"].arr().orEmpty().mapNotNull { it.obj()?.get("quotaId").str() } }
         val daily = quotaIds.any { it.contains("PerDay", ignoreCase = true) } || message.contains("PerDay", ignoreCase = true)
         val noQuota = Regex("limit: 0\\b").containsMatchIn(message)
@@ -227,9 +229,13 @@ class GeminiModel(
             }
         val who = model ?: "That model"
         val text = when {
-            code == 400 && message.contains("API key not valid", ignoreCase = true) ->
-                "Gemini rejected the API key. Check it in Settings; a truncated paste is the usual cause."
-            code == 401 -> "Gemini rejected the key: $message"
+            keyInvalid -> "Gemini rejected the API key. Check it in Settings; a truncated paste is the usual cause."
+            // Google's wording ("Expected OAuth 2 access token") reads as if the app sent the wrong
+            // kind of credential. It did not: in October 2026 an AQ. key with one stray character
+            // at the end got this very answer, and so does a made-up one.
+            code == 401 -> "Google won't accept this Gemini key (${reason ?: "HTTP 401"}). " +
+                (if (apiKey.startsWith("AQ.")) "It says this when an AQ. key has a stray or missing character, or was deleted. " else "") +
+                "Copy it from AI Studio again, paste it in Settings and tap Check key. If a fresh copy fails too, create a new key, or switch to Claude."
             code == 403 -> "Your key was refused (403). The Generative Language API may not be enabled for its project, or the key is restricted. $message"
             code == 404 -> "$who is not available to this key (retired or renamed)."
             code == 429 && noQuota -> "$who has no free-tier quota on this key."
@@ -246,6 +252,7 @@ class GeminiModel(
             nextModel = code == 404 || code == 429,
             model = model,
             retryAfterSeconds = if (code == 429 && (daily || noQuota || (retryAfter ?: 0) > 600)) (retryAfter ?: 24 * 3600L) else null,
+            badKey = keyInvalid || code == 401 || code == 403,
         )
     }
 

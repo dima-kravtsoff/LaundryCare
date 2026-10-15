@@ -42,6 +42,7 @@ sealed interface Part {
  * @param nextModel whether the failure is about the model rather than the request: retired, or out of quota.
  * @param model the model id the failure is about, when it is about one.
  * @param retryAfterSeconds for a spent quota, how long until it refills; null for anything else.
+ * @param badKey the key itself was refused, so every other call with it will fail the same way.
  */
 class AiException(
     message: String,
@@ -50,6 +51,7 @@ class AiException(
     val nextModel: Boolean = false,
     val model: String? = null,
     val retryAfterSeconds: Long? = null,
+    val badKey: Boolean = false,
 ) : Exception(message)
 
 /** Both features, provider-agnostic. Implementations: [GeminiModel], [ClaudeModel]. */

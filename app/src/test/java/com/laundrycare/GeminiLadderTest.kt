@@ -55,8 +55,8 @@ class GeminiLadderTest {
     @After
     fun stop() = server.shutdown()
 
-    private fun model(preferred: String, known: Set<String> = emptySet()) = GeminiModel(
-        apiKey = "k", preferredModel = preferred, knownModels = known,
+    private fun model(preferred: String, known: Set<String> = emptySet(), key: String = "k") = GeminiModel(
+        apiKey = key, preferredModel = preferred, knownModels = known,
         onModelSwitched = { switched += it },
         onFallback = { used, reason -> fallbacks += used to reason },
         onModelsListed = { listed += it },
@@ -183,7 +183,34 @@ class GeminiLadderTest {
         } catch (e: AiException) {
             assertEquals(400, e.code)
             assertFalse(e.nextModel)
+            assertTrue(e.badKey)
             assertTrue(e.message!!.contains("rejected the API key"))
+        }
+        assertEquals(listOf("gemini-3.8-flash"), calls)
+    }
+
+    /** The reply Google gave in October 2026 to an AQ. key with one character too many, and to a made-up one. */
+    @Test
+    fun `an AQ key Google refuses gets advice, not Google's OAuth wording`() = runBlocking {
+        answers = mapOf(
+            "gemini-3.8-flash" to MockResponse().setResponseCode(401).setBody(
+                """{"error":{"code":401,"message":"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.","status":"UNAUTHENTICATED","details":[
+                    {"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"ACCESS_TOKEN_TYPE_UNSUPPORTED","metadata":{"method":"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent","service":"generativelanguage.googleapis.com"}}]}}""",
+            ),
+        )
+        try {
+            model("gemini-3.8-flash", key = "AQ.Ab8test").locateSymbols(ByteArray(4))
+            fail()
+        } catch (e: AiException) {
+            assertEquals(401, e.code)
+            assertTrue(e.badKey)
+            assertFalse(e.retryable)
+            assertFalse(e.nextModel)
+            val m = e.message!!
+            assertTrue(m.contains("ACCESS_TOKEN_TYPE_UNSUPPORTED"))
+            assertTrue(m.contains("stray or missing character"))
+            assertTrue(m.contains("AI Studio"))
+            assertFalse(m.contains("OAuth"))
         }
         assertEquals(listOf("gemini-3.8-flash"), calls)
     }
